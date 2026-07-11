@@ -310,6 +310,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun installSkill(skill: CustomSkill) {
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    app.database.customSkillDao().upsert(skill)
+                }
+                _messages.update { it + ChatMessage(text = "Skill installed: ${skill.name}", isUser = false) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Skill install failed: ${e.message}", e)
+            }
+        }
+    }
+
     fun switchToGroq() {
         _llmMode.value = "groq"
         Preferences.llmMode = "groq"

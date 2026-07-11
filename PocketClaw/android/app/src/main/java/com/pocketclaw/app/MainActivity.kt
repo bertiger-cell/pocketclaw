@@ -100,6 +100,7 @@ class MainActivity : ComponentActivity() {
                         customSkills = customSkills,
                         onDeleteSkill = viewModel::deleteSkill,
                         onToggleSkill = viewModel::toggleSkill,
+                        onInstallSkill = viewModel::installSkill,
                     )
                     3 -> SettingsScreen(
                         llmMode = llmMode,

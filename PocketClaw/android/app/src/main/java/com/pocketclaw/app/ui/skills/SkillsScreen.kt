@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -56,6 +57,7 @@ fun SkillsScreen(
     customSkills: List<CustomSkill>,
     onDeleteSkill: (CustomSkill) -> Unit,
     onToggleSkill: (CustomSkill) -> Unit,
+    onInstallSkill: (CustomSkill) -> Unit = {},
 ) {
     val colors = AppColors
     Column(
@@ -73,8 +75,29 @@ fun SkillsScreen(
             text = "Built-in + custom. Chat \"add a skill for ...\" to create new ones.",
             style = MaterialTheme.typography.bodySmall,
             color = colors.textSecondary,
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
+            modifier =             modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
         )
+
+        var showSkillHub by remember { mutableStateOf(false) }
+
+        OutlinedButton(
+            onClick = { showSkillHub = true },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 12.dp),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = CrabOrange),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Icon(Icons.Default.Storefront, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Skill Hub - Mehr Skills entdecken")
+        }
+
+        if (showSkillHub) {
+            SkillHubDialog(
+                onDismiss = { showSkillHub = false },
+                onInstall = { skill -> onInstallSkill(skill) },
+                installedIds = customSkills.map { it.name.lowercase() },
+            )
+        }
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),

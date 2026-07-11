@@ -29,6 +29,7 @@ data class HubSkill(
 )
 
 val HUB_SKILLS = listOf(
+    HubSkill("web_search", "Web Search", "Durchsucht das Internet via DuckDuckGo nach aktuellen Informationen", "Wissen", listOf("web", "search", "suche", "internet", "online", "nachrichten", "aktuell", "google", "finden", "recherchieren"), "Suche nach den aktuellen Nachrichten", "Hier sind die aktuellen Nachrichten..."),
     HubSkill("code_helper", "Code Helper", "Hilft beim Schreiben und Erklaeren von Code", "Entwicklung", listOf("code", "programmierung", "python", "java", "javascript", "function"), "Erklaere diese Funktion", "Hier ist die Erklaerung..."),
     HubSkill("email_writer", "E-Mail Schreiber", "Verfasst professionelle E-Mails", "Kommunikation", listOf("email", "mail", "nachricht", "schreiben"), "Schreib mir eine E-Mail", "Hier ist ein Entwurf..."),
     HubSkill("meal_planner", "Essensplaner", "Wochenplan fuer Mahlzeiten mit Einkaufsliste", "Gesundheit", listOf("essen", "mahlzeit", "plan", "kochen", "rezept"), "Erstelle einen Wochenplan fuers Essen", "Dein Wochenplan..."),

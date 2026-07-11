@@ -471,6 +471,42 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         sb: StringBuilder,
         placeholderId: String,
     ) {
+        val prompt = PromptAssembler.toGenericFormat(assembled)
+        Log.d(TAG, "API prompt length: ${prompt.length} chars")
+
+        // Check if Groq API key is set
+        val unified = inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
+        if (unified != null && Preferences.groqApiKey.isNotBlank()) {
+            Log.d(TAG, "Using Groq Cloud API with model: ${Preferences.groqSelectedModel}")
+            try {
+                unified.groqService.loadModel(
+                    LLMModel(
+                        name = "Groq", description = "", url = "",
+                        category = "text", sizeBytes = 0L, source = "",
+                        supportsVision = false,
+                        requirements = com.llmhub.llmhub.data.ModelRequirements(1, 2),
+                        contextWindowSize = 32768, modelFormat = "groq",
+                        groqModelId = Preferences.groqSelectedModel
+                    )
+                )
+                val chatId = currentChatId ?: return
+                val responseFlow = unified.groqService.generateResponseStreamWithSession(prompt, com.llmhub.llmhub.data.ModelData.models.find { it.modelFormat == "groq" } ?: return, chatId)
+                responseFlow.collect { chunk ->
+                    sb.append(chunk)
+                    val currentText = sb.toString()
+                    _messages.update { list ->
+                        list.map { if (it.id == placeholderId) it.copy(text = currentText) else it }
+                    }
+                }
+                return
+            } catch (e: Exception) {
+                Log.e(TAG, "Groq API failed: ${e.message}", e)
+                sb.append("\n\n[Groq Fehler: ${e.message} - Fallback zu DashScope]\n\n")
+            }
+        }
+
+        // Fallback to DashScope
+        Log.d(TAG, "Using DashScope API")
         DashScopeProvider.generateStream(assembled).collect { chunk ->
             sb.append(chunk)
             val currentText = sb.toString()

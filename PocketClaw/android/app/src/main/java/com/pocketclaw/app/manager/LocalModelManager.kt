@@ -17,8 +17,18 @@ object LocalModelManager {
     /**
      * Get common storage paths where user might put model
      */
-    fun getCommonModelPaths(): List<Pair<String, String>> {
+    fun getCommonModelPaths(context: android.content.Context? = null): List<Pair<String, String>> {
         val paths = mutableListOf<Pair<String, String>>()
+        
+        // App-internal models directory (where in-app download saves to)
+        if (context != null) {
+            val internalModels = java.io.File(context.filesDir, "models")
+            if (internalModels.exists()) {
+                internalModels.listFiles()?.filter { it.name.endsWith(".gguf") }?.forEach { file ->
+                    paths.add(Pair(file.absolutePath, "🦞 App/${file.name} (${String.format("%.1f", file.length() / (1024.0 * 1024.0))} MB)"))
+                }
+            }
+        }
         
         // /sdcard/Download/ - Qwen3
         paths.add(Pair(

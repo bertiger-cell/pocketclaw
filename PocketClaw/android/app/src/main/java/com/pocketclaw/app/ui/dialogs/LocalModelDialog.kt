@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.pocketclaw.app.manager.LocalModelManager
 import com.pocketclaw.app.ui.theme.AppColors
@@ -20,7 +21,8 @@ fun LocalModelDialog(
     onModelSelected: (modelPath: String) -> Unit,
 ) {
     val colors = AppColors
-    val commonPaths = LocalModelManager.getCommonModelPaths()
+    val context = LocalContext.current
+    val commonPaths = LocalModelManager.getCommonModelPaths(context)
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -95,7 +97,7 @@ fun LocalModelDialog(
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 Text(
-                    "💡 Tip: Download qwen3-1.7b-instruct-q8_0.gguf from HuggingFace and put it in:\n• /sdcard/Download/\n• /sdcard/Documents/models/\n• /PocketClaw/models/",
+                    "💡 Tip: Use the download buttons in Settings → AI Brain, or manually place .gguf files in:\n• /sdcard/Download/\n• App-internal models/ (auto-detected)",
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.textSecondary
                 )

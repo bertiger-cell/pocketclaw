@@ -155,7 +155,7 @@ fun SettingsScreen(
                 } else {
                     // Show download buttons
                     SettingsItem(
-                        icon = Icons.Default.CloudDownload, title = "Download Qwen3 (Q4_K_M)",
+                        icon = Icons.Default.Download, title = "Download Qwen3 (Q4_K_M)",
                         subtitle = "1.2 GB – Recommended for most devices",
                         onClick = {
                             onDownloadModel(
@@ -167,7 +167,7 @@ fun SettingsScreen(
                     )
                     HorizontalDivider(color = colors.surface, thickness = 1.dp)
                     SettingsItem(
-                        icon = Icons.Default.CloudDownload, title = "Download Gemma-3 (Q4_K_M)",
+                        icon = Icons.Default.Download, title = "Download Gemma-3 (Q4_K_M)",
                         subtitle = "769 MB – Fastest, great for older devices",
                         onClick = {
                             onDownloadModel(

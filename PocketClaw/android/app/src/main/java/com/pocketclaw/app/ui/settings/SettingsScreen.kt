@@ -53,6 +53,12 @@ fun SettingsScreen(
     qwenProgress: Float = 0f,
     onDownloadQwen: () -> Unit = {},
     onSwitchToGroq: () -> Unit = {},
+    localModels: List<com.llmhub.llmhub.data.LLMModel> = emptyList(),
+    modelDownloads: Map<String, com.pocketclaw.app.ui.MainViewModel.ModelDownloadState> = emptyMap(),
+    modelLoading: Boolean = false,
+    lastError: String? = null,
+    onDownloadModel: (com.llmhub.llmhub.data.LLMModel) -> Unit = {},
+    onLoadLocalModel: (com.llmhub.llmhub.data.LLMModel) -> Unit = {},
 ) {
     var sttEnabled by remember { mutableStateOf(Preferences.sttEnabled) }
     var ttsEnabled by remember { mutableStateOf(Preferences.ttsEnabled) }
@@ -516,6 +522,7 @@ private fun SettingsItem(
 private fun SettingsToggle(
     icon: ImageVector, title: String, subtitle: String,
     checked: Boolean, onCheckedChange: (Boolean) -> Unit, colors: AppColors,
+    titleColor: androidx.compose.ui.graphics.Color = colors.textPrimary,
 ) {
     Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, null, tint = CrabOrange, modifier = Modifier.size(24.dp))

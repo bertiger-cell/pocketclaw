@@ -150,9 +150,7 @@ class LiteRTLMInferenceService(private val context: Context) : InferenceService 
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error in generateResponseStream: ${e.message}", e)
-                emit("
-
-[Fehler: ${e.message}]")
+                emit("\n\n[Fehler: ${e.message}]")
             }
         }
     }

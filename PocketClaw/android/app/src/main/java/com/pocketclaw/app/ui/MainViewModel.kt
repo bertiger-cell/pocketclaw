@@ -366,7 +366,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         userText: String,
         toolResults: List<ToolContext> = recentToolResults.toList(),
     ): PromptAssembler.AssembledPrompt {
-        // For Groq: use simple prompt (no skills/tools/markers)
+        // For Groq: include installed skills as context
         if (_llmMode.value == "groq") {
             val recentHistory = _messages.value.takeLast(10).map { msg ->
                 PromptAssembler.ChatTurn(
@@ -374,9 +374,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     content = msg.text,
                 )
             }
+            val enabledSkills = withContext(Dispatchers.IO) {
+                app.database.customSkillDao().enabledSkills()
+            }
+            val groqSkills = enabledSkills.map { s ->
+                SkillsPrompt.SkillDef(
+                    id = "custom_${s.id}", name = s.name, description = s.description,
+                    exampleQ = s.exampleQuery, exampleA = s.exampleAnswer, isCustom = true,
+                )
+            }
             return PromptAssembler.assemble(
                 memories = emptyList(),
-                skills = emptyList(),
+                skills = groqSkills,
                 recentHistory = recentHistory,
                 userMessage = userText,
                 growthStage = 0,

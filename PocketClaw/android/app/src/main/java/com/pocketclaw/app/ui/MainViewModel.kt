@@ -516,14 +516,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 withContext(Dispatchers.Main) {
-                    _downloadStatus.value = "Download complete!"
+                    _downloadStatus.value = "Download complete! Loading model..."
                     _downloadProgress.value = 1f
-                    _isDownloading.value = false
-                    Toast.makeText(app, "Model downloaded! Restarting...", Toast.LENGTH_LONG).show()
                 }
 
                 // Reload model
-                loadFirstAvailableModel()
+                try {
+                    loadFirstAvailableModelSync()
+                    withContext(Dispatchers.Main) {
+                        _downloadStatus.value = "Model ready!"
+                        _isDownloading.value = false
+                        Toast.makeText(app, "Model loaded successfully!", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to load model after download: ${e.message}", e)
+                    withContext(Dispatchers.Main) {
+                        _downloadStatus.value = "Download OK but model failed to load: ${e.message}"
+                        _isDownloading.value = false
+                        Toast.makeText(app, "Download OK but model failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
 
             } catch (e: Exception) {
                 Log.e(TAG, "Download failed: ${e.message}", e)
@@ -534,6 +546,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         }
+    }
+
+    /**
+     * Synchronous model loading - called after download completes.
+     * Runs on IO dispatcher, updates state on Main.
+     */
+    private suspend fun loadFirstAvailableModelSync() {
+        val models = withContext(Dispatchers.IO) {
+            ModelRepository.getAvailableModels(app)
+        }
+        val downloaded = models.filter { it.isDownloaded }
+        if (downloaded.isEmpty()) {
+            throw Exception("No downloaded models found after download")
+        }
+        val model = downloaded.first()
+        currentModel = model
+        withContext(Dispatchers.Main) {
+            _currentModelName.value = model.name
+        }
+        Log.d(TAG, "Loading model: ${model.name}")
+        val ok = withContext(Dispatchers.IO) {
+            inferenceService.loadModel(model)
+        }
+        withContext(Dispatchers.Main) {
+            _isModelLoaded.value = ok
+        }
+        if (!ok) {
+            throw Exception("Inference service failed to load ${model.name}")
+        }
+        Log.d(TAG, "Model loaded successfully: ${model.name}")
     }
 
     fun switchLlmMode(mode: String) {

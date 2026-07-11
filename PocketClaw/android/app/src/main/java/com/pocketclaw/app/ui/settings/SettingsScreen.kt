@@ -519,6 +519,7 @@ private fun GroqModelDialog(
     )
 }
 
+@Composable
 private fun GroqApiKeyDialog(
     onDismiss: () -> Unit,
     onSave: (String) -> Unit,

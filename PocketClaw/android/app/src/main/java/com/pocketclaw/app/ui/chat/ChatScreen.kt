@@ -35,6 +35,10 @@ import androidx.compose.ui.unit.dp
 import com.pocketclaw.app.R
 import com.llmhub.llmhub.data.LLMModel
 import com.pocketclaw.app.ui.theme.*
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Cloud
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -101,7 +105,7 @@ fun ChatScreen(
                 onClick = { showModelDropdown = true },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = colors.primary
+                    contentColor = CrabOrange
                 ),
                 shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
@@ -145,7 +149,7 @@ fun ChatScreen(
                                         else -> "📱 Lokal (${model.modelFormat})"
                                     },
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = colors.onSurface.copy(alpha = 0.6f)
+                                    color = colors.textSecondary
                                 )
                             }
                         },
@@ -155,7 +159,7 @@ fun ChatScreen(
                         },
                         leadingIcon = {
                             if (model.name == currentModelName) {
-                                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp))
                             }
                         }
                     )

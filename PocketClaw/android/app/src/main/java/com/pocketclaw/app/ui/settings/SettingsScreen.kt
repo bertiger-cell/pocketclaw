@@ -42,6 +42,7 @@ fun SettingsScreen(
     onOpenNotificationSettings: () -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     onRequestStoragePermission: () -> Unit,
+    onSetGroqApiKey: (String) -> Unit = {},
     qwenDownloaded: Boolean = false,
     qwenDownloading: Boolean = false,
     qwenProgress: Float = 0f,
@@ -171,8 +172,8 @@ fun SettingsScreen(
                 )
                 HorizontalDivider(color = colors.surface, thickness = 1.dp)
                 SettingsItem(
-                    icon = Icons.Default.Cloud, title = "Groq Cloud (Qwen3-1.7B Q4)",
-                    subtitle = if (Preferences.groqApiKey.isNotBlank()) "Aktiv ✓ • ••••${Preferences.groqApiKey.takeLast(6)}" else "Free tier - console.groq.com",
+                    icon = Icons.Default.Cloud, title = "Groq Cloud API",
+                    subtitle = if (Preferences.groqApiKey.isNotBlank()) "Aktiv ✓ • ••••${Preferences.groqApiKey.takeLast(6)}" else "Kostenlos: console.groq.com → API Key holen",
                     onClick = { showGroqApiKeyDialog = true }, colors = colors,
                 )
             }
@@ -349,6 +350,17 @@ fun SettingsScreen(
         )
     }
 
+    if (showGroqApiKeyDialog) {
+        GroqApiKeyDialog(
+            onDismiss = { showGroqApiKeyDialog = false },
+            onSave = { key ->
+                Preferences.groqApiKey = key
+                onSetGroqApiKey(key)
+                showGroqApiKeyDialog = false
+            },
+        )
+    }
+
     if (showMessagingDialog) {
         MessagingTokensDialog(onDismiss = { showMessagingDialog = false })
     }
@@ -442,8 +454,49 @@ private fun ApiKeyDialog(
                 ),
             )
         },
-        confirmButton = { TextButton(onClick = { onSave(key) }) { Text("Save", color = CrabOrange) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = colors.textSecondary) } },
+        confirmButton = { TextButton(onClick = { onSave(key) }) { Text("Speichern", color = CrabOrange) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen", color = colors.textSecondary) } },
+    )
+}
+
+@Composable
+private fun GroqApiKeyDialog(
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+) {
+    var key by remember { mutableStateOf(Preferences.groqApiKey) }
+    val colors = AppColors
+    AlertDialog(
+        onDismissRequest = onDismiss, containerColor = colors.card,
+        title = { Text("Groq API Key", color = colors.textPrimary) },
+        text = {
+            Column {
+                Text(
+                    text = "So kommst du an einen kostenlosen API Key:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.textSecondary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "1. Öffne console.groq.com\n2. Konto erstellen (kostenlos)\n3. API Keys → Create Key\n4. Key hier einfügen",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textMuted
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = key, onValueChange = { key = it },
+                    label = { Text("gsk_...") }, singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = CrabOrange, unfocusedBorderColor = colors.textMuted,
+                        cursorColor = CrabOrange, focusedTextColor = colors.textPrimary,
+                        unfocusedTextColor = colors.textPrimary,
+                        focusedLabelColor = CrabOrange, unfocusedLabelColor = colors.textSecondary,
+                    ),
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = { onSave(key) }) { Text("Speichern", color = CrabOrange) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen", color = colors.textSecondary) } },
     )
 }
 

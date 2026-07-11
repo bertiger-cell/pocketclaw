@@ -126,6 +126,7 @@ class MainActivity : ComponentActivity() {
                         qwenProgress = viewModel.qwenProgress.collectAsState().value,
                         onDownloadQwen = viewModel::downloadQwenModel,
                         onSwitchToGroq = viewModel::switchToGroq,
+                        onSetGroqApiKey = viewModel::setGroqApiKey,
                     )
                 }
             }

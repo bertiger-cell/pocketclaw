@@ -3,6 +3,7 @@ package com.llmhub.llmhub.inference
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import com.pocketclaw.app.data.Preferences
 import com.llmhub.llmhub.data.LLMModel
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import kotlinx.coroutines.Dispatchers
@@ -44,9 +45,19 @@ class GroqInferenceService(private val context: Context) : InferenceService {
 
     private val sessionResetTimes = mutableMapOf<String, Long>()
 
+    init {
+        // Auto-load API key from Preferences
+        val savedKey = Preferences.groqApiKey
+        if (savedKey.isNotBlank()) {
+            apiKey = savedKey
+            Log.i(TAG, "Groq API key loaded from Preferences")
+        }
+    }
+
     fun setApiKey(key: String) {
         apiKey = key
-        Log.i(TAG, "API key set")
+        Preferences.groqApiKey = key
+        Log.i(TAG, "API key set and saved")
     }
 
     fun getApiKey(): String = apiKey

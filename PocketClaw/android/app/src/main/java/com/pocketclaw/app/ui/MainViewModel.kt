@@ -208,6 +208,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _qwenDownloading.value = true
             _qwenProgress.value = 0f
             try {
+                // Check if already downloaded
                 val models = withContext(Dispatchers.IO) {
                     ModelRepository.getAvailableModels(app)
                 }
@@ -229,30 +230,57 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val modelsDir = java.io.File(app.filesDir, "models")
                 modelsDir.mkdirs()
                 val targetFile = java.io.File(modelsDir, modelDef.localFileName())
-                val url = java.net.URL(modelDef.url)
-                val conn = url.openConnection() as java.net.HttpURLConnection
-                conn.connectTimeout = 30_000
-                conn.readTimeout = 60_000
-                conn.connect()
-                val totalBytes = conn.contentLength.toLong()
-                conn.inputStream.use { input ->
-                    java.io.FileOutputStream(targetFile).use { output ->
-                        val buffer = ByteArray(8192)
-                        var downloaded = 0L
-                        var read: Int
-                        while (input.read(buffer).also { read = it } != -1) {
-                            output.write(buffer, 0, read)
-                            downloaded += read
-                            if (totalBytes > 0) {
-                                _qwenProgress.value = (downloaded.toFloat() / totalBytes).coerceIn(0f, 1f)
+
+                // Use OkHttp for proper HuggingFace LFS redirect handling
+                val client = okhttp3.OkHttpClient.Builder()
+                    .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                    .readTimeout(300, java.util.concurrent.TimeUnit.SECONDS)
+                    .followRedirects(true)
+                    .followSslRedirects(true)
+                    .build()
+                val request = okhttp3.Request.Builder()
+                    .url(modelDef.url)
+                    .addHeader("User-Agent", "PocketClaw/1.0")
+                    .build()
+                val response = withContext(Dispatchers.IO) {
+                    client.newCall(request).execute()
+                }
+                if (!response.isSuccessful) {
+                    _qwenDownloading.value = false
+                    _messages.update { it + ChatMessage(text = "Download Fehler: HTTP ${response.code}", isUser = false) }
+                    return@launch
+                }
+                val body = response.body ?: run {
+                    _qwenDownloading.value = false
+                    _messages.update { it + ChatMessage(text = "Download Fehler: leerer Response", isUser = false) }
+                    return@launch
+                }
+                val totalBytes = body.contentLength()
+                withContext(Dispatchers.IO) {
+                    body.byteStream().use { input ->
+                        java.io.FileOutputStream(targetFile).use { output ->
+                            val buffer = ByteArray(8192)
+                            var downloaded = 0L
+                            var read: Int
+                            while (input.read(buffer).also { read = it } != -1) {
+                                output.write(buffer, 0, read)
+                                downloaded += read
+                                if (totalBytes > 0) {
+                                    _qwenProgress.value = (downloaded.toFloat() / totalBytes).coerceIn(0f, 1f)
+                                }
                             }
                         }
                     }
                 }
-                _qwenDownloaded.value = true
-                _messages.update { it + ChatMessage(text = "Qwen3-1.7B heruntergeladen! ✓", isUser = false) }
-                // Auto-load the model
-                loadFirstAvailableModel()
+                // Verify file was downloaded
+                if (targetFile.exists() && targetFile.length() > 10_000_000) {
+                    _qwenDownloaded.value = true
+                    _messages.update { it + ChatMessage(text = "Qwen3-1.7B heruntergeladen! (${targetFile.length() / 1_000_000} MB) ✓", isUser = false) }
+                    loadFirstAvailableModel()
+                } else {
+                    targetFile.delete()
+                    _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: Datei zu klein (${targetFile.length()} bytes)", isUser = false) }
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Download failed: ${e.message}", e)
                 _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${e.message}", isUser = false) }

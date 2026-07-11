@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.util.Log
 import com.pocketclaw.app.data.Preferences
 import com.llmhub.llmhub.data.LLMModel
+import com.pocketclaw.claw.tools.ToolRegistry
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -123,8 +124,25 @@ class GroqInferenceService(private val context: Context) : InferenceService {
                 val choices = json.getJSONArray("choices")
                 if (choices.length() > 0) {
                     val message = choices.getJSONObject(0).getJSONObject("message")
-                    val content = message.getString("content")
-                    emit(content)
+
+                    // Emit text content if present
+                    val content = message.optString("content", "")
+                    if (content.isNotBlank()) {
+                        emit(content)
+                    }
+
+                    // Check for OpenAI tool_calls and convert to text markers
+                    if (message.has("tool_calls")) {
+                        val toolCalls = message.getJSONArray("tool_calls")
+                        for (i in 0 until toolCalls.length()) {
+                            val tc = toolCalls.getJSONObject(i)
+                            val fn = tc.getJSONObject("function")
+                            val name = fn.getString("name")
+                            val args = fn.optString("arguments", "")
+                            // Convert to text marker format for ToolParser compatibility
+                            emit("\n[T:${name}:${args}]\n")
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error parsing Groq response: ${e.message}", e)
@@ -178,18 +196,54 @@ class GroqInferenceService(private val context: Context) : InferenceService {
 
     private fun buildRequestBody(prompt: String): JSONObject {
         val messages = JSONArray().apply {
+            // System message with tool instructions
+            put(JSONObject().apply {
+                put("role", "system")
+                val toolPrompt = ToolRegistry.buildToolListPrompt()
+                put("content", "Du bist PocketClaw, ein hilfreicher KI-Assistent.\nNutze Werkzeuge wenn nötig.\n\n$toolPrompt\n\nWichtig: Du KANNST Werkzeuge verwenden wenn sie helfen. Wenn kein Werkzeug benötigt wird, antworte einfach normal.\nAntworte auf Deutsch, kurz und präzise.")
+            })
             put(JSONObject().apply {
                 put("role", "user")
                 put("content", prompt)
             })
         }
 
-        return JSONObject().apply {
+        val body = JSONObject().apply {
             put("model", Preferences.groqSelectedModel)
             put("messages", messages)
             put("max_tokens", (currentModel?.let { getEffectiveMaxTokens(it) } ?: 4096))
             put("temperature", (overrideTemperature ?: 0.7).toDouble())
             if (overrideTopP != null) put("top_p", overrideTopP!!.toDouble())
         }
+
+        // Add OpenAI-compatible tools from ToolRegistry
+        val tools = ToolRegistry.all()
+        if (tools.isNotEmpty()) {
+            val toolsArray = JSONArray()
+            for (tool in tools) {
+                val toolObj = JSONObject().apply {
+                    put("type", "function")
+                    put("function", JSONObject().apply {
+                        put("name", tool.id)
+                        put("description", "${tool.name}: ${tool.description}")
+                        put("parameters", JSONObject().apply {
+                            put("type", "object")
+                            put("properties", JSONObject().apply {
+                                put("args", JSONObject().apply {
+                                    put("type", "string")
+                                    put("description", "Argument für ${tool.id}: ${tool.paramHint}")
+                                })
+                            })
+                            put("required", JSONArray())
+                        })
+                    })
+                }
+                toolsArray.put(toolObj)
+            }
+            body.put("tools", toolsArray)
+            body.put("tool_choice", "auto")
+        }
+
+        return body
     }
 }

@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.llmhub.llmhub.data.LLMModel
 import com.llmhub.llmhub.data.ModelRepository
+import com.llmhub.llmhub.data.localFileName
 import com.llmhub.llmhub.inference.InferenceService
 import com.llmhub.llmhub.repository.ChatRepository
 import com.llmhub.llmhub.ui.components.TtsService
@@ -107,6 +108,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val skillUsage: StateFlow<Map<String, Int>> = MutableStateFlow(emptyMap())
 
+    private val _qwenDownloaded = MutableStateFlow(false)
+    val qwenDownloaded: StateFlow<Boolean> = _qwenDownloaded.asStateFlow()
+    private val _qwenDownloading = MutableStateFlow(false)
+    val qwenDownloading: StateFlow<Boolean> = _qwenDownloading.asStateFlow()
+    private val _qwenProgress = MutableStateFlow(0f)
+    val qwenProgress: StateFlow<Float> = _qwenProgress.asStateFlow()
+
     val auditEntries: List<AuditLog.Entry> get() = app.auditLog.recent()
 
     init {
@@ -193,6 +201,72 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val unified = app.inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
         unified?.groqService?.setApiKey(key)
         Log.d(TAG, "Groq API key saved and set")
+    }
+
+    fun downloadQwenModel() {
+        viewModelScope.launch {
+            _qwenDownloading.value = true
+            _qwenProgress.value = 0f
+            try {
+                val models = withContext(Dispatchers.IO) {
+                    ModelRepository.getAvailableModels(app)
+                }
+                val qwenModel = models.find { it.modelFormat == "litertlm" && it.name.contains("Qwen3") }
+                if (qwenModel != null && qwenModel.isDownloaded) {
+                    _qwenDownloaded.value = true
+                    _qwenDownloading.value = false
+                    return@launch
+                }
+                // Find the Qwen3-1.7B model definition
+                val modelDef = com.llmhub.llmhub.data.ModelData.models.find {
+                    it.modelFormat == "litertlm" && it.name.contains("Qwen3")
+                }
+                if (modelDef == null) {
+                    _qwenDownloading.value = false
+                    _messages.update { it + ChatMessage(text = "Qwen3-1.7B LiteRT-LM Modell nicht gefunden.", isUser = false) }
+                    return@launch
+                }
+                val modelsDir = java.io.File(app.filesDir, "models")
+                modelsDir.mkdirs()
+                val targetFile = java.io.File(modelsDir, modelDef.localFileName())
+                val url = java.net.URL(modelDef.url)
+                val conn = url.openConnection() as java.net.HttpURLConnection
+                conn.connectTimeout = 30_000
+                conn.readTimeout = 60_000
+                conn.connect()
+                val totalBytes = conn.contentLength.toLong()
+                conn.inputStream.use { input ->
+                    java.io.FileOutputStream(targetFile).use { output ->
+                        val buffer = ByteArray(8192)
+                        var downloaded = 0L
+                        var read: Int
+                        while (input.read(buffer).also { read = it } != -1) {
+                            output.write(buffer, 0, read)
+                            downloaded += read
+                            if (totalBytes > 0) {
+                                _qwenProgress.value = (downloaded.toFloat() / totalBytes).coerceIn(0f, 1f)
+                            }
+                        }
+                    }
+                }
+                _qwenDownloaded.value = true
+                _messages.update { it + ChatMessage(text = "Qwen3-1.7B heruntergeladen! ✓", isUser = false) }
+                // Auto-load the model
+                loadFirstAvailableModel()
+            } catch (e: Exception) {
+                Log.e(TAG, "Download failed: ${e.message}", e)
+                _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${e.message}", isUser = false) }
+            } finally {
+                _qwenDownloading.value = false
+            }
+        }
+    }
+
+    fun switchToGroq() {
+        _llmMode.value = "api"
+        Preferences.llmMode = "api"
+        val unified = inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
+        unified?.groqService?.setApiKey(Preferences.groqApiKey)
     }
 
     private fun initializeChat() {

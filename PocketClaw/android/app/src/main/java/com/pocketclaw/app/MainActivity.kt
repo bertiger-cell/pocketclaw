@@ -121,6 +121,11 @@ class MainActivity : ComponentActivity() {
                                 startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
                             }
                         },
+                        qwenDownloaded = viewModel.qwenDownloaded.collectAsState().value,
+                        qwenDownloading = viewModel.qwenDownloading.collectAsState().value,
+                        qwenProgress = viewModel.qwenProgress.collectAsState().value,
+                        onDownloadQwen = viewModel::downloadQwenModel,
+                        onSwitchToGroq = viewModel::switchToGroq,
                     )
                 }
             }

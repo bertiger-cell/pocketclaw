@@ -23,6 +23,9 @@ import com.pocketclaw.app.data.ScheduledTask
 import com.pocketclaw.app.ui.theme.*
 import com.pocketclaw.claw.security.AuditLog
 import com.pocketclaw.app.service.ScreenControlService
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.LinearProgressIndicator
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,6 +42,11 @@ fun SettingsScreen(
     onOpenNotificationSettings: () -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     onRequestStoragePermission: () -> Unit,
+    qwenDownloaded: Boolean = false,
+    qwenDownloading: Boolean = false,
+    qwenProgress: Float = 0f,
+    onDownloadQwen: () -> Unit = {},
+    onSwitchToGroq: () -> Unit = {},
 ) {
     var sttEnabled by remember { mutableStateOf(Preferences.sttEnabled) }
     var ttsEnabled by remember { mutableStateOf(Preferences.ttsEnabled) }
@@ -131,6 +139,29 @@ fun SettingsScreen(
                     colors = FilterChipDefaults.filterChipColors(selectedContainerColor = CrabOrangeDark, selectedLabelColor = DarkTextPrimary),
                 )
             }
+            if (llmMode == "local") {
+                HorizontalDivider(color = colors.surface, thickness = 1.dp)
+                if (qwenDownloaded) {
+                    SettingsItem(
+                        icon = Icons.Default.CheckCircle, title = "Qwen3-1.7B (LiteRT-LM)",
+                        subtitle = "Downloaded ✓",
+                        onClick = { }, colors = colors,
+                    )
+                } else {
+                    SettingsItem(
+                        icon = Icons.Default.Download, title = "Qwen3-1.7B herunterladen",
+                        subtitle = if (qwenDownloading) "Lädt herunter... ${(qwenProgress * 100).toInt()}%" else "LiteRT-LM • 2.1 GB",
+                        onClick = { if (!qwenDownloading) onDownloadQwen() }, colors = colors,
+                    )
+                    if (qwenDownloading) {
+                        LinearProgressIndicator(
+                            progress = { qwenProgress },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                            color = CrabOrange,
+                        )
+                    }
+                }
+            }
             if (llmMode == "api") {
                 HorizontalDivider(color = colors.surface, thickness = 1.dp)
                 SettingsItem(
@@ -140,8 +171,8 @@ fun SettingsScreen(
                 )
                 HorizontalDivider(color = colors.surface, thickness = 1.dp)
                 SettingsItem(
-                    icon = Icons.Default.Cloud, title = "Groq API Key",
-                    subtitle = if (Preferences.groqApiKey.isNotBlank()) "••••${Preferences.groqApiKey.takeLast(6)}" else "Free tier - groq.com",
+                    icon = Icons.Default.Cloud, title = "Groq Cloud (Qwen3-1.7B Q4)",
+                    subtitle = if (Preferences.groqApiKey.isNotBlank()) "Aktiv ✓ • ••••${Preferences.groqApiKey.takeLast(6)}" else "Free tier - console.groq.com",
                     onClick = { showGroqApiKeyDialog = true }, colors = colors,
                 )
             }

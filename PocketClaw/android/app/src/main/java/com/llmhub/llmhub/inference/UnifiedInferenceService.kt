@@ -16,6 +16,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     private val mediaPipeService = MediaPipeInferenceService(context)
     private val onnxService = OnnxInferenceService(context)
     private val nexaService = NexaInferenceService(context)
+    private val liteRTLMService = LiteRTLMInferenceService(context)
 
     /** Whether the Nexa backend (for GGUF models) is usable on this device. */
     fun isNexaAvailable(): Boolean =
@@ -25,14 +26,15 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     private var currentModel: LLMModel? = null
 
     override suspend fun loadModel(model: LLMModel, preferredBackend: LlmInference.Backend?, deviceId: String?): Boolean {
-        // Determine which service to use initially
+        // Determine which service to use based on model format
         if (model.modelFormat == "gguf" && !isNexaAvailable()) {
-            android.util.Log.w("UnifiedInferenceService", "Nexa SDK unavailable - cannot load GGUF model. Use a MediaPipe (.task) model instead.")
-            throw AllBackendsFailedException("GGUF backend unavailable on this device. Please use a MediaPipe (.task) model.")
+            android.util.Log.w("UnifiedInferenceService", "Nexa SDK unavailable - cannot load GGUF model. Use a MediaPipe (.task) or LiteRT-LM (.litertlm) model instead.")
+            throw AllBackendsFailedException("GGUF backend unavailable on this device. Please use a LiteRT-LM (.litertlm) or MediaPipe (.task) model.")
         }
         val targetService = when (model.modelFormat) {
             "onnx" -> onnxService
             "gguf" -> nexaService
+            "litertlm" -> liteRTLMService
             else -> mediaPipeService
         }
 
@@ -79,12 +81,13 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
         deviceId: String?
     ): Boolean {
         if (model.modelFormat == "gguf" && !isNexaAvailable()) {
-            android.util.Log.w("UnifiedInferenceService", "Nexa SDK unavailable - cannot load GGUF model. Use a MediaPipe (.task) model instead.")
-            throw AllBackendsFailedException("GGUF backend unavailable on this device. Please use a MediaPipe (.task) model.")
+            android.util.Log.w("UnifiedInferenceService", "Nexa SDK unavailable - cannot load GGUF model. Use a MediaPipe (.task) or LiteRT-LM (.litertlm) model instead.")
+            throw AllBackendsFailedException("GGUF backend unavailable on this device. Please use a LiteRT-LM (.litertlm) or MediaPipe (.task) model.")
         }
         val targetService = when (model.modelFormat) {
             "onnx" -> onnxService
             "gguf" -> nexaService
+            "litertlm" -> liteRTLMService
             else -> mediaPipeService
         }
 
@@ -179,6 +182,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     override fun setGenerationParameters(maxTokens: Int?, topK: Int?, topP: Float?, temperature: Float?, nGpuLayers: Int?, enableThinking: Boolean?) {
         mediaPipeService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
         onnxService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
+        liteRTLMService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
         if (isNexaAvailable()) {
             nexaService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
         }
@@ -200,6 +204,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
         return when (model.modelFormat) {
             "onnx" -> onnxService.getEffectiveMaxTokens(model)
             "gguf" -> if (isNexaAvailable()) nexaService.getEffectiveMaxTokens(model) else mediaPipeService.getEffectiveMaxTokens(model)
+            "litertlm" -> liteRTLMService.getEffectiveMaxTokens(model)
             else -> mediaPipeService.getEffectiveMaxTokens(model)
         }
     }

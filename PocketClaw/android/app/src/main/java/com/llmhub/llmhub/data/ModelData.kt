@@ -1404,6 +1404,36 @@ object ModelData {
             modelFormat = "litertlm"
         ),
 
+        // SmolVLM2-500M (Multimodal Vision+Text via LiteRT-LM)
+        LLMModel(
+            name = "SmolVLM2-500M (Vision)",
+            description = "HuggingFace SmolVLM2 500M - tiny multimodal vision-language model. Send images + text, get answers. 361MB, works on ALL devices. (361MB)",
+            url = "https://huggingface.co/litert-community/SmolVLM2-500M/resolve/main/SmolVLM2-500M.litertlm?download=true",
+            category = "text",
+            sizeBytes = 361052336L, // 361 MB
+            source = "HuggingFace via litert-community",
+            supportsVision = true,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 2, recommendedRamGB = 3),
+            contextWindowSize = 2048,
+            modelFormat = "litertlm"
+        ),
+
+        // SmolVLM2-2.2B (Better Multimodal Vision+Text via LiteRT-LM)
+        LLMModel(
+            name = "SmolVLM2-2.2B (Vision)",
+            description = "HuggingFace SmolVLM2 2.2B - larger multimodal vision-language model. Better quality than 500M. 1.5GB. (1.5GB)",
+            url = "https://huggingface.co/litert-community/SmolVLM2-2.2B/resolve/main/SmolVLM2-2.2B.litertlm?download=true",
+            category = "text",
+            sizeBytes = 1511353264L, // 1.5 GB
+            source = "HuggingFace via litert-community",
+            supportsVision = true,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 3, recommendedRamGB = 4),
+            contextWindowSize = 2048,
+            modelFormat = "litertlm"
+        ),
+
         // Gemma-3 1B Models (Google GGUF)
         LLMModel(
             name = "Gemma-3 1B (Q4_K_M)",

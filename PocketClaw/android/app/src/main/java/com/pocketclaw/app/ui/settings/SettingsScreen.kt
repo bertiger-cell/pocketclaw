@@ -167,12 +167,24 @@ fun SettingsScreen(
                     )
                     HorizontalDivider(color = colors.surface, thickness = 1.dp)
                     SettingsItem(
-                        icon = Icons.Default.Download, title = "Download Gemma-3 1B (INT4)",
-                        subtitle = "529 MB – Lightweight, fast on all devices",
+                        icon = Icons.Default.Download, title = "Download SmolVLM2-500M (Vision)",
+                        subtitle = "361 MB – Multimodal: send images + text",
                         onClick = {
                             onDownloadModel(
-                                "https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/Gemma3-1B-IT_multi-prefill-seq_q4_ekv2048.task?download=true",
-                                "Gemma3-1B-IT_multi-prefill-seq_q4_ekv2048.task"
+                                "https://huggingface.co/litert-community/SmolVLM2-500M/resolve/main/SmolVLM2-500M.litertlm?download=true",
+                                "SmolVLM2-500M.litertlm"
+                            )
+                        },
+                        colors = colors,
+                    )
+                    HorizontalDivider(color = colors.surface, thickness = 1.dp)
+                    SettingsItem(
+                        icon = Icons.Default.Download, title = "Download SmolVLM2-2.2B (Vision)",
+                        subtitle = "1.5 GB – Better quality multimodal",
+                        onClick = {
+                            onDownloadModel(
+                                "https://huggingface.co/litert-community/SmolVLM2-2.2B/resolve/main/SmolVLM2-2.2B.litertlm?download=true",
+                                "SmolVLM2-2.2B.litertlm"
                             )
                         },
                         colors = colors,

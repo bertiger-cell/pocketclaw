@@ -156,6 +156,9 @@ dependencies {
     implementation("com.google.mediapipe:tasks-vision:0.10.32")
     implementation("com.google.mediapipe:tasks-text:0.10.32")
 
+    // LiteRT-LM (.litertlm format - supports Qwen3, Gemma3/4, SmolVLM2, etc.)
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.14.0")
+
     // Protobuf (required by MediaPipe)
     implementation("com.google.protobuf:protobuf-java:3.25.1")
     implementation("org.slf4j:slf4j-nop:2.0.9")

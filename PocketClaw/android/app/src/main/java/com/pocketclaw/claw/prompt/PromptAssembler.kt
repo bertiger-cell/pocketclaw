@@ -29,6 +29,7 @@ object PromptAssembler {
         growthStage: Int = 0,
         toolResults: List<ToolContext> = emptyList(),
         budget: ContextBudget = ContextBudget.LOCAL,
+        includeToolInstructions: Boolean = false,
     ): AssembledPrompt {
         val systemPrompt = buildString {
             val soul = SOUL.build()
@@ -45,6 +46,14 @@ object PromptAssembler {
             if (skillsSection.isNotBlank()) {
                 append("\n")
                 append(skillsSection.take(budget.skillsChars))
+            }
+
+            if (includeToolInstructions) {
+                append("\n\nVerfuegbare Tools (verwende dieses Format):\n")
+                append("[T:web_search:Suchbegriff] - Web-Suche\n")
+                append("[T:note:Notiztext] - Notiz speichern\n")
+                append("[T:translate:Text] - Uebersetzen\n")
+                append("WICHTIG: Gib IMMER das genaue Format [T:tool_id:args] aus wenn du ein Tool brauchst!\n")
             }
 
             if (toolResults.isNotEmpty()) {

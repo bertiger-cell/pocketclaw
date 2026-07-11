@@ -389,8 +389,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 recentHistory = recentHistory,
                 userMessage = userText,
                 growthStage = 0,
-                toolResults = emptyList(),
+                toolResults = toolResults,
                 budget = ContextBudget.forMode("groq"),
+                includeToolInstructions = true,
             )
         }
 
@@ -448,13 +449,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val rawOutput = sb.toString()
 
-                if (mode == "groq") {
-                    // Groq models: show response directly (no tool parsing)
+                val toolCalls = ToolParser.parse(rawOutput)
+                if (mode == "groq" && toolCalls.isEmpty()) {
+                    // Groq: no tool calls found, show directly
                     _messages.update { list ->
                         list.map { if (it.id == placeholderId) it.copy(text = rawOutput) else it }
                     }
+                } else if (mode == "groq" && toolCalls.isNotEmpty()) {
+                    // Groq: tool calls found, execute them
+                    handleToolCalls(toolCalls, rawOutput, placeholderId, userText)
                 } else {
-                    val toolCalls = ToolParser.parse(rawOutput)
                     if (toolCalls.isNotEmpty()) {
                         handleToolCalls(toolCalls, rawOutput, placeholderId, userText)
                     } else {

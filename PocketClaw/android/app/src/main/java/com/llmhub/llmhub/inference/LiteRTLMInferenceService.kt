@@ -86,8 +86,8 @@ class LiteRTLMInferenceService(private val context: Context) : InferenceService 
                 // Create conversation with generation parameters
                 val samplerConfig = SamplerConfig(
                     topK = overrideTopK ?: 40,
-                    topP = overrideTopP ?: 0.95f,
-                    temperature = overrideTemperature ?: 0.8f,
+                    topP = (overrideTopP ?: 0.95f).toDouble(),
+                    temperature = (overrideTemperature ?: 0.8f).toDouble(),
                 )
 
                 val convConfig = ConversationConfig(
@@ -142,7 +142,7 @@ class LiteRTLMInferenceService(private val context: Context) : InferenceService 
         return flow {
             val conv = conversation ?: throw IllegalStateException("No conversation loaded")
             try {
-                conv.sendMessageAsync(prompt).collect { chunk ->
+                conv.sendMessageAsync(prompt.toString()).collect { chunk ->
                     emit(chunk)
                 }
             } catch (e: Exception) {
@@ -178,8 +178,8 @@ class LiteRTLMInferenceService(private val context: Context) : InferenceService 
             val currentEngine = engine ?: return
             val samplerConfig = SamplerConfig(
                 topK = overrideTopK ?: 40,
-                topP = overrideTopP ?: 0.95f,
-                temperature = overrideTemperature ?: 0.8f,
+                topP = (overrideTopP ?: 0.95f).toDouble(),
+                temperature = (overrideTemperature ?: 0.8f).toDouble(),
             )
             conversation = currentEngine.createConversation(
                 ConversationConfig(samplerConfig = samplerConfig)

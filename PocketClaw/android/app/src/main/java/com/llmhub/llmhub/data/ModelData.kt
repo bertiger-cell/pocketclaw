@@ -1374,6 +1374,21 @@ object ModelData {
         //     )
         // ),
 
+        // Qwen3-1.7B Models (Alibaba GGUF)
+        LLMModel(
+            name = "Qwen3-1.7B (Q8_0)",
+            description = "Alibaba Qwen3-1.7B with Q8_0 quantization (8-bit). Excellent quality-to-size ratio. 32k context window, extendable to 128k. Supports thinking/reasoning mode. The recommended default for PocketClaw. (1.75GB)",
+            url = "https://huggingface.co/Qwen/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q8_0.gguf?download=true",
+            category = "text",
+            sizeBytes = 1834426016L, // 1749.4 MB (exact HF size)
+            source = "Alibaba via Qwen",
+            supportsVision = false,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 3, recommendedRamGB = 4),
+            contextWindowSize = 32768,
+            modelFormat = "gguf"
+        ),
+
         // Ministral-3 3B Instruct Models (MistralAI GGUF)
         LLMModel(
             name = "Ministral-3 3B Instruct (Q4_K_M)",
@@ -1834,6 +1849,9 @@ object ModelData {
         * Note: Vision support modules are now downloaded automatically with these models.
         
         ✅ TEXT MODELS:
+        
+        🔹 QWEN3-1.7B SERIES (Alibaba - GGUF):
+        • Qwen3-1.7B Q8_0 (32k context, recommended default, 1.75GB)
         
         🔹 LFM-2.5 SERIES (LiquidAI - GGUF):
         • LFM-2.5 1.2B Instruct (128k context)

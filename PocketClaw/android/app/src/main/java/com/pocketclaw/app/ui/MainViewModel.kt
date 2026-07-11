@@ -353,6 +353,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         userText: String,
         toolResults: List<ToolContext> = recentToolResults.toList(),
     ): PromptAssembler.AssembledPrompt {
+        // For Groq: use simple prompt (no skills/tools/markers)
+        if (_llmMode.value == "groq") {
+            val recentHistory = _messages.value.takeLast(10).map { msg ->
+                PromptAssembler.ChatTurn(
+                    role = if (msg.isUser) "user" else "assistant",
+                    content = msg.text,
+                )
+            }
+            return PromptAssembler.assemble(
+                memories = emptyList(),
+                skills = emptyList(),
+                recentHistory = recentHistory,
+                userMessage = userText,
+                growthStage = 0,
+                toolResults = emptyList(),
+                budget = ContextBudget.forMode("groq"),
+            )
+        }
+
         val bondMemories = withContext(Dispatchers.IO) { bondEngine.getMemoriesForPrompt() }
         val growthStageVal = withContext(Dispatchers.IO) { bondEngine.getGrowthStage() }
         val enabledSkills = withContext(Dispatchers.IO) {
@@ -407,13 +426,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val rawOutput = sb.toString()
 
-                val toolCalls = ToolParser.parse(rawOutput)
-                if (toolCalls.isNotEmpty()) {
-                    handleToolCalls(toolCalls, rawOutput, placeholderId, userText)
-                } else {
-                    val cleaned = withContext(Dispatchers.IO) { bondEngine.processResponse(rawOutput) }
+                if (mode == "groq") {
+                    // Groq models: show response directly (no tool parsing)
                     _messages.update { list ->
-                        list.map { if (it.id == placeholderId) it.copy(text = cleaned) else it }
+                        list.map { if (it.id == placeholderId) it.copy(text = rawOutput) else it }
+                    }
+                } else {
+                    val toolCalls = ToolParser.parse(rawOutput)
+                    if (toolCalls.isNotEmpty()) {
+                        handleToolCalls(toolCalls, rawOutput, placeholderId, userText)
+                    } else {
+                        val cleaned = withContext(Dispatchers.IO) { bondEngine.processResponse(rawOutput) }
+                        _messages.update { list ->
+                            list.map { if (it.id == placeholderId) it.copy(text = cleaned) else it }
+                        }
                     }
                 }
 

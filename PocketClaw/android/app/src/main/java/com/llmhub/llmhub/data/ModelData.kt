@@ -1376,16 +1376,31 @@ object ModelData {
 
         // Qwen3-1.7B Models (Alibaba GGUF)
         LLMModel(
-            name = "Qwen3-1.7B (Q8_0)",
-            description = "Alibaba Qwen3-1.7B with Q8_0 quantization (8-bit). Excellent quality-to-size ratio. 32k context window, extendable to 128k. Supports thinking/reasoning mode. The recommended default for PocketClaw. (1.75GB)",
-            url = "https://huggingface.co/Qwen/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q8_0.gguf?download=true",
+            name = "Qwen3-1.7B (Q4_K_M)",
+            description = "Alibaba Qwen3-1.7B with Q4_K_M quantization. Great balance of quality and speed. 32k context window, extendable to 128k. Supports thinking/reasoning mode. Recommended for mid-range devices. (1.2GB)",
+            url = "https://huggingface.co/bartowski/Qwen_Qwen3-1.7B-GGUF/resolve/main/Qwen_Qwen3-1.7B-Q4_K_M.gguf?download=true",
             category = "text",
-            sizeBytes = 1834426016L, // 1749.4 MB (exact HF size)
-            source = "Alibaba via Qwen",
+            sizeBytes = 1282627584L, // 1223 MB (actual HF size)
+            source = "Alibaba via Qwen (bartowski)",
             supportsVision = false,
             supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 3, recommendedRamGB = 4),
+            requirements = ModelRequirements(minRamGB = 2, recommendedRamGB = 3),
             contextWindowSize = 32768,
+            modelFormat = "gguf"
+        ),
+
+        // Gemma-3 1B Models (Google GGUF)
+        LLMModel(
+            name = "Gemma-3 1B (Q4_K_M)",
+            description = "Google Gemma-3 1B with Q4_K_M quantization. Smallest and fastest option, ideal for older or low-RAM devices. 8k context window. Great for quick conversations. (769MB)",
+            url = "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/main/google_gemma-3-1b-it-Q4_K_M.gguf?download=true",
+            category = "text",
+            sizeBytes = 806518784L, // 769 MB (actual HF size)
+            source = "Google via bartowski",
+            supportsVision = false,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 2, recommendedRamGB = 3),
+            contextWindowSize = 8192,
             modelFormat = "gguf"
         ),
 
@@ -1851,7 +1866,10 @@ object ModelData {
         ✅ TEXT MODELS:
         
         🔹 QWEN3-1.7B SERIES (Alibaba - GGUF):
-        • Qwen3-1.7B Q8_0 (32k context, recommended default, 1.75GB)
+        • Qwen3-1.7B Q4_K_M (32k context, 1.2GB - recommended)
+
+        🔹 GEMMA-3 SERIES (Google - GGUF):
+        • Gemma-3 1B Q4_K_M (8k context, 769MB - fastest)
         
         🔹 LFM-2.5 SERIES (LiquidAI - GGUF):
         • LFM-2.5 1.2B Instruct (128k context)

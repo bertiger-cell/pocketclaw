@@ -20,10 +20,16 @@ object LocalModelManager {
     fun getCommonModelPaths(): List<Pair<String, String>> {
         val paths = mutableListOf<Pair<String, String>>()
         
-        // /sdcard/Download/
+        // /sdcard/Download/ - Qwen3
         paths.add(Pair(
-            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/Qwen3-1.7B-Q8_0.gguf",
-            "📥 Downloads/Qwen3-1.7B-Q8_0.gguf"
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/Qwen_Qwen3-1.7B-Q4_K_M.gguf",
+            "📥 Downloads/Qwen_Qwen3-1.7B-Q4_K_M.gguf"
+        ))
+        
+        // /sdcard/Download/ - Gemma
+        paths.add(Pair(
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/google_gemma-3-1b-it-Q4_K_M.gguf",
+            "📥 Downloads/google_gemma-3-1b-it-Q4_K_M.gguf"
         ))
         
         // /sdcard/Documents/models/

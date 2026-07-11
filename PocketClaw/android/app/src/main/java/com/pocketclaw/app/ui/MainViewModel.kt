@@ -486,33 +486,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         placeholderId: String,
     ) {
         val prompt = PromptAssembler.toGenericFormat(assembled)
-        Log.d(TAG, "Groq prompt: ${prompt.length} chars")
+        Log.d(TAG, "Groq prompt: ${prompt.length} chars, model: ${Preferences.groqSelectedModel}")
         val unified = inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
         if (unified == null || Preferences.groqApiKey.isBlank()) {
-            sb.append("Kein Groq API Key. Bitte in Einstellungen eintragen.")
+            sb.append("Kein Groq API Key. Bitte in Einstellungen unter Groq Cloud eintragen.")
             _messages.update { list -> list.map { if (it.id == placeholderId) it.copy(text = sb.toString()) else it } }
             return
         }
         try {
-            val groqModel = LLMModel(
+            unified.groqService.setApiKey(Preferences.groqApiKey)
+            val chatId = currentChatId ?: return
+            val responseFlow = unified.groqService.generateResponseStream(prompt, com.llmhub.llmhub.data.LLMModel(
                 name = "Groq", description = "", url = "",
-                category = "text", sizeBytes = 0L, source = "Groq Cloud",
+                category = "text", sizeBytes = 0L, source = "Groq",
                 supportsVision = false,
                 requirements = com.llmhub.llmhub.data.ModelRequirements(1, 2),
-                contextWindowSize = 32768, modelFormat = "groq",
-                groqModelId = Preferences.groqSelectedModel
-            )
-            unified.groqService.loadModel(groqModel)
-            val chatId = currentChatId ?: return
-            val responseFlow = unified.groqService.generateResponseStreamWithSession(prompt, groqModel, chatId)
+                contextWindowSize = 32768, modelFormat = "groq"
+            ))
             responseFlow.collect { chunk ->
                 sb.append(chunk)
                 val currentText = sb.toString()
                 _messages.update { list -> list.map { if (it.id == placeholderId) it.copy(text = currentText) else it } }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Groq failed: ${e.message}", e)
-            sb.append("Fehler: ${e.message}")
+            Log.e(TAG, "Groq error: ${e.message}", e)
+            sb.append("Groq Fehler: ${e.message}")
             _messages.update { list -> list.map { if (it.id == placeholderId) it.copy(text = sb.toString()) else it } }
         }
     }

@@ -49,13 +49,13 @@ class GroqInferenceService(private val context: Context) : InferenceService {
         // Auto-load API key from Preferences
         val savedKey = Preferences.groqApiKey
         if (savedKey.isNotBlank()) {
-            apiKey = savedKey
+            apiKey = savedKey.trim()
             Log.i(TAG, "Groq API key loaded from Preferences")
         }
     }
 
     fun setApiKey(key: String) {
-        apiKey = key
+        apiKey = key.trim()
         Preferences.groqApiKey = key
         Log.i(TAG, "API key set and saved")
     }
@@ -187,7 +187,7 @@ class GroqInferenceService(private val context: Context) : InferenceService {
         return JSONObject().apply {
             put("model", Preferences.groqSelectedModel)
             put("messages", messages)
-            put("max_tokens", getEffectiveMaxTokens(currentModel ?: return@apply))
+            put("max_tokens", (currentModel?.let { getEffectiveMaxTokens(it) } ?: 4096))
             put("temperature", (overrideTemperature ?: 0.7).toDouble())
             if (overrideTopP != null) put("top_p", overrideTopP!!.toDouble())
         }

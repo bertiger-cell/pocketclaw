@@ -29,22 +29,53 @@ data class HubSkill(
 )
 
 val HUB_SKILLS = listOf(
-    HubSkill("web_search", "Web Search", "Durchsucht das Internet via DuckDuckGo nach aktuellen Informationen", "Wissen", listOf("web", "search", "suche", "internet", "online", "nachrichten", "aktuell", "google", "finden", "recherchieren"), "Suche nach den aktuellen Nachrichten", "Hier sind die aktuellen Nachrichten..."),
+    // === Produktivitaet ===
+    HubSkill("web_search", "Web Search", "Durchsucht das Internet via DuckDuckGo", "Wissen", listOf("web", "suche", "internet", "nachrichten", "aktuell", "google"), "Suche nach aktuellen Nachrichten", "Hier sind die Ergebnisse..."),
+    HubSkill("blueprint", "Projekt-Blueprint", "Verwandelt Ziele in Schritt-fuer-Schritt-Plaene", "Produktivitaet", listOf("plan", "ziel", "projekt", "planung", "schritte"), "Erstelle einen Plan fuer mein Projekt", "Schritt 1: ..."),
+    HubSkill("concise-planning", "Kompakte Planung", "Klare, aktionsfaehige Checklisten", "Produktivitaet", listOf("checkliste", "plan", "aufgabe", "todo", "aktion"), "Erstelle eine Checkliste fuer...", "1. ...
+2. ..."),
+    HubSkill("brain-to-docs", "Brainstorm zu Docs", "Verwandelt Ideen in README und Dokumentation", "Produktivitaet", listOf("doku", "readme", "dokumentation", "idee"), "Dokumentiere unsere Ideen", "Hier ist die Dokumentation..."),
+
+    // === Schreiben & Content ===
+    HubSkill("bulletmind", "Bullet Points", "Strukturierte Aufzaehlungen und Zusammenfassungen", "Schreiben", listOf("bullet", "zusammenfassung", "liste", "punkte", "struktur"), "Fasse das als Bullet Points zusammen", "- Punkt 1
+- Punkt 2"),
+    HubSkill("beautiful-prose", "Gutes Schreiben", "Kraftvoller Schreibstil ohne AI-Klischees", "Schreiben", listOf("schreiben", "text", "prosa", "stil", "editorial"), "Schreibe einen kraftvollen Text ueber...", "Hier ist der Text..."),
+    HubSkill("blog-writing-guide", "Blog Schreiben", "Blog-Artikel mit SEO-Struktur", "Schreiben", listOf("blog", "artikel", "seo", "posting"), "Schreibe einen Blog-Artikel ueber...", "Titel: ...
+Einleitung: ..."),
+    HubSkill("avoid-ai-writing", "Kein AI-Stil", "Entfernt typische AI-Schreibmuster", "Schreiben", listOf("ai", "schreibstil", "natuerlich", "menschlich"), "Mache diesen Text natuerlicher", "Hier ist die ueberarbeitete Version..."),
+    HubSkill("citation-management", "Zitationen", "Quellenangaben und Referenzen verwalten", "Schreiben", listOf("quelle", "zitation", "referenz", "bibliographie"), "Fuege Quellenangaben hinzu", "Hier sind die Zitationen..."),
+    HubSkill("content-marketer", "Content Marketing", "AI-gestuetzte Content-Erstellung und SEO", "Schreiben", listOf("marketing", "content", "seo", "text"), "Erstelle Marketing-Content fuer...", "Hier ist der Content..."),
+
+    // === Business ===
+    HubSkill("business-analyst", "Business Analyse", "Datengetriebene Geschaeftsanalyse", "Business", listOf("business", "analyse", "geschaeft", "daten", "kpi"), "Analysiere mein Geschaeftsmodell", "Analyse: ..."),
+    HubSkill("competitive-landscape", "Wettbewerbsanalyse", "Konkurrenz analysieren und differenzieren", "Business", listOf("konkurrenz", "wettbewerb", "markt", "analyse"), "Analysiere meine Konkurrenz", "Wettbewerbsanalyse: ..."),
+    HubSkill("finance", "Finanz-Assistent", "Budgetplanung und Sparen", "Business", listOf("geld", "budget", "sparen", "finanz"), "Erstelle ein Budget", "Dein Monatsbudget..."),
+
+    // === Entwicklung ===
     HubSkill("code_helper", "Code Helper", "Hilft beim Schreiben und Erklaeren von Code", "Entwicklung", listOf("code", "programmierung", "python", "java", "javascript", "function"), "Erklaere diese Funktion", "Hier ist die Erklaerung..."),
-    HubSkill("email_writer", "E-Mail Schreiber", "Verfasst professionelle E-Mails", "Kommunikation", listOf("email", "mail", "nachricht", "schreiben"), "Schreib mir eine E-Mail", "Hier ist ein Entwurf..."),
-    HubSkill("meal_planner", "Essensplaner", "Wochenplan fuer Mahlzeiten mit Einkaufsliste", "Gesundheit", listOf("essen", "mahlzeit", "plan", "kochen", "rezept"), "Erstelle einen Wochenplan fuers Essen", "Dein Wochenplan..."),
-    HubSkill("workout", "Fitness Coach", "Trainingsplaeene und Fitness-Tipps", "Gesundheit", listOf("training", "fitness", "uebung", "sport", "workout"), "Erstelle einen Trainingsplan", "Hier ist dein Plan..."),
-    HubSkill("study_buddy", "Lern-Assistent", "Zusammenfassungen und Karteikarten", "Bildung", listOf("lernen", "zusammenfassung", "pruefung", "karteikarte", "studium"), "Fasse dieses Thema zusammen", "Zusammenfassung..."),
-    HubSkill("travel_planner", "Reiseplaner", "Reisen mit Budget und Tipps", "Reisen", listOf("reise", "urlaub", "flug", "hotel", "budget"), "Plan mir eine Reise nach Tokyo", "Dein Tokyo-Plan..."),
-    HubSkill("diy_helper", "DIY-Assistent", "Heimprojekte und Reparatur-Tipps", "Heimwerken", listOf("diy", "reparatur", "bauen", "werkzeug"), "Wie repariere ich einen tropfenden Hahn", "Schritt-fuer-Schritt..."),
-    HubSkill("brainstorm", "Brainstorming", "Hilft bei Ideenfindung", "Kreativitaet", listOf("idee", "brainstorm", "kreativ"), "Hilf mir beim Brainstorming", "5 Ideen fuer dein Projekt..."),
-    HubSkill("story_writer", "Geschichten-Schreiber", "Kurze Geschichten und Gedichte", "Kreativitaet", listOf("geschichte", "story", "gedicht", "schreiben"), "Schreib eine Geschichte ueber einen Drachen", "Es war einmal..."),
-    HubSkill("shopping_list", "Einkaufsliste", "Listen basierend auf Rezepten", "Alltag", listOf("einkauf", "liste", "supermarkt"), "Einkaufsliste fuer Pasta Bolognese", "500g Hackfleisch..."),
-    HubSkill("pet_care", "Haustier-Berater", "Pflege-Tipps fuer Haustiere", "Haustiere", listOf("haustier", "hund", "katze", "futter"), "Wie pflege ich meinen Hund", "Dein Hund braucht..."),
-    HubSkill("finance", "Finanz-Assistent", "Budgetplanung und Sparen", "Finanzen", listOf("geld", "budget", "sparen", "finanz"), "Erstelle ein Budget", "Dein Monatsbudget..."),
-    HubSkill("language_tutor", "Sprach-Tutor", "Fremdsprachen lernen", "Bildung", listOf("sprache", "lernen", "uebersetzen", "englisch"), "Lehr mich Japanisch", "Konnichiwa! Grundlagen..."),
-    HubSkill("meditation", "Meditations-Guide", "Meditation und Atemuebungen", "Gesundheit", listOf("meditation", "atmen", "entspannen", "yoga"), "Fuehr mich durch eine Meditation", "Schliesse die Augen..."),
-    HubSkill("recipe_finder", "Rezept-Finder", "Findet Rezepte basierend auf Zutaten", "Kochen", listOf("rezept", "kochen", "zutat", "gericht"), "Was kann ich mit Tomaten kochen?", "Tomaten-Kaprese..."),
+    HubSkill("android-dev", "Android Entwicklung", "Production-grade Android App Development", "Entwicklung", listOf("android", "kotlin", "java", "app"), "Hilf mir bei Android Entwicklung", "Guide: ..."),
+
+    // === Kreativitaet ===
+    HubSkill("brainstorm", "Brainstorming", "Hilft bei Ideenfindung", "Kreativitaet", listOf("idee", "brainstorm", "kreativ"), "Hilf mir beim Brainstorming", "5 Ideen..."),
+    HubSkill("story_writer", "Geschichten-Schreiber", "Kurze Geschichten und Gedichte", "Kreativitaet", listOf("geschichte", "story", "gedicht"), "Schreib eine Geschichte", "Es war einmal..."),
+    HubSkill("article-illustrations", "Illustrationen", "Beschreibt Illustrationen fuer Artikel", "Kreativitaet", listOf("bild", "illustration", "grafik"), "Beschreibe eine Illustration fuer...", "Beschreibung: ..."),
+
+    // === Gesundheit ===
+    HubSkill("meal_planner", "Essensplaner", "Wochenplan fuer Mahlzeiten", "Gesundheit", listOf("essen", "mahlzeit", "kochen", "rezept"), "Erstelle einen Wochenplan", "Dein Wochenplan..."),
+    HubSkill("workout", "Fitness Coach", "Trainingsplaeene", "Gesundheit", listOf("training", "fitness", "sport"), "Erstelle einen Trainingsplan", "Dein Plan..."),
+    HubSkill("meditation", "Meditations-Guide", "Meditation und Atemuebungen", "Gesundheit", listOf("meditation", "atmen", "entspannen"), "Fuehr mich durch eine Meditation", "Schliesse die Augen..."),
+
+    // === Bildung ===
+    HubSkill("study_buddy", "Lern-Assistent", "Zusammenfassungen und Karteikarten", "Bildung", listOf("lernen", "zusammenfassung", "pruefung"), "Fasse dieses Thema zusammen", "Zusammenfassung..."),
+    HubSkill("language_tutor", "Sprach-Tutor", "Fremdsprachen lernen", "Bildung", listOf("sprache", "lernen", "englisch"), "Lehr mich Japanisch", "Grundlagen..."),
+
+    // === Alltag ===
+    HubSkill("email_writer", "E-Mail Schreiber", "Professionelle E-Mails", "Alltag", listOf("email", "mail", "nachricht"), "Schreib mir eine E-Mail", "Entwurf..."),
+    HubSkill("shopping_list", "Einkaufsliste", "Listen basierend auf Rezepten", "Alltag", listOf("einkauf", "liste", "supermarkt"), "Einkaufsliste fuer Pasta", "500g Hackfleisch..."),
+    HubSkill("travel_planner", "Reiseplaner", "Reisen mit Budget", "Reisen", listOf("reise", "urlaub", "flug", "hotel"), "Plan mir eine Reise", "Dein Plan..."),
+    HubSkill("diy_helper", "DIY-Assistent", "Heimprojekte und Reparaturen", "Alltag", listOf("diy", "reparatur", "bauen"), "Wie repariere ich...", "Schritt-fuer-Schritt..."),
+    HubSkill("recipe_finder", "Rezept-Finder", "Rezepte nach Zutaten", "Kochen", listOf("rezept", "kochen", "zutat"), "Was kann ich mit Tomaten kochen?", "Tomaten-Kaprese..."),
+    HubSkill("pet_care", "Haustier-Berater", "Pflege-Tipps", "Haustiere", listOf("haustier", "hund", "katze"), "Wie pflege ich meinen Hund", "Dein Hund braucht..."),
 )
 
 @Composable

@@ -143,7 +143,7 @@ class LiteRTLMInferenceService(private val context: Context) : InferenceService 
             val conv = conversation ?: throw IllegalStateException("No conversation loaded")
             try {
                 conv.sendMessageAsync(prompt).collect { message ->
-                    emit(message.text)
+                    emit(message.toString())
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error in generateResponseStream: ${e.message}", e)

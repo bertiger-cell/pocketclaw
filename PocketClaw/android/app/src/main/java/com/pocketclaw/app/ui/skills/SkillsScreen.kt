@@ -16,7 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -75,7 +75,7 @@ fun SkillsScreen(
             text = "Built-in + custom. Chat \"add a skill for ...\" to create new ones.",
             style = MaterialTheme.typography.bodySmall,
             color = colors.textSecondary,
-            modifier =             modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
         )
 
         var showSkillHub by remember { mutableStateOf(false) }

@@ -123,7 +123,7 @@ fun SettingsScreen(
             ) {
                 FilterChip(
                     selected = llmMode == "local", onClick = { onSwitchLlmMode("local") },
-                    label = { Text("Local (Qwen3)") },
+                    label = { Text("Local AI") },
                     leadingIcon = { if (llmMode == "local") Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) },
                     colors = FilterChipDefaults.filterChipColors(selectedContainerColor = CrabOrangeDark, selectedLabelColor = DarkTextPrimary),
                 )
@@ -155,24 +155,24 @@ fun SettingsScreen(
                 } else {
                     // Show download buttons
                     SettingsItem(
-                        icon = Icons.Default.Download, title = "Download Qwen3 (Q4_K_M)",
-                        subtitle = "1.2 GB – Recommended for most devices",
+                        icon = Icons.Default.Download, title = "Download Qwen3-1.7B (LiteRT)",
+                        subtitle = "2.1 GB – Works on ALL devices via MediaPipe",
                         onClick = {
                             onDownloadModel(
-                                "https://huggingface.co/bartowski/Qwen_Qwen3-1.7B-GGUF/resolve/main/Qwen_Qwen3-1.7B-Q4_K_M.gguf?download=true",
-                                "Qwen_Qwen3-1.7B-Q4_K_M.gguf"
+                                "https://huggingface.co/litert-community/Qwen3-1.7B/resolve/main/Qwen3_1.7B.litertlm?download=true",
+                                "Qwen3_1.7B.litertlm"
                             )
                         },
                         colors = colors,
                     )
                     HorizontalDivider(color = colors.surface, thickness = 1.dp)
                     SettingsItem(
-                        icon = Icons.Default.Download, title = "Download Gemma-3 (Q4_K_M)",
-                        subtitle = "769 MB – Fastest, great for older devices",
+                        icon = Icons.Default.Download, title = "Download Gemma-3 1B (INT4)",
+                        subtitle = "529 MB – Lightweight, fast on all devices",
                         onClick = {
                             onDownloadModel(
-                                "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/main/google_gemma-3-1b-it-Q4_K_M.gguf?download=true",
-                                "google_gemma-3-1b-it-Q4_K_M.gguf"
+                                "https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/Gemma3-1B-IT_multi-prefill-seq_q4_ekv2048.task?download=true",
+                                "Gemma3-1B-IT_multi-prefill-seq_q4_ekv2048.task"
                             )
                         },
                         colors = colors,

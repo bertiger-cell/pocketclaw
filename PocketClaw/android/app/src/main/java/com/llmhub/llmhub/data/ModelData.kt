@@ -1377,7 +1377,7 @@ object ModelData {
         // Qwen3-1.7B Models (Alibaba GGUF)
         LLMModel(
             name = "Qwen3-1.7B (Q4_K_M)",
-            description = "Alibaba Qwen3-1.7B with Q4_K_M quantization. Great balance of quality and speed. 32k context window, extendable to 128k. Supports thinking/reasoning mode. Recommended for mid-range devices. (1.2GB)",
+            description = "Alibaba Qwen3-1.7B Q4_K_M via Nexa SDK (Qualcomm NPU required). 32k context, thinking mode. NOT compatible with Exynos/MTK chips. (1.2GB)",
             url = "https://huggingface.co/bartowski/Qwen_Qwen3-1.7B-GGUF/resolve/main/Qwen_Qwen3-1.7B-Q4_K_M.gguf?download=true",
             category = "text",
             sizeBytes = 1282627584L, // 1223 MB (actual HF size)
@@ -1389,10 +1389,25 @@ object ModelData {
             modelFormat = "gguf"
         ),
 
+        // Qwen3-1.7B LiteRT-LM (works on all devices via MediaPipe)
+        LLMModel(
+            name = "Qwen3-1.7B (LiteRT)",
+            description = "Alibaba Qwen3-1.7B via MediaPipe LiteRT. Works on ALL Android devices including Exynos, no special NPU required. (2.1GB)",
+            url = "https://huggingface.co/litert-community/Qwen3-1.7B/resolve/main/Qwen3_1.7B.litertlm?download=true",
+            category = "text",
+            sizeBytes = 2056729520L, // 2.1 GB
+            source = "Alibaba via litert-community",
+            supportsVision = false,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 3, recommendedRamGB = 4),
+            contextWindowSize = 4096,
+            modelFormat = "litertlm"
+        ),
+
         // Gemma-3 1B Models (Google GGUF)
         LLMModel(
             name = "Gemma-3 1B (Q4_K_M)",
-            description = "Google Gemma-3 1B with Q4_K_M quantization. Smallest and fastest option, ideal for older or low-RAM devices. 8k context window. Great for quick conversations. (769MB)",
+            description = "Google Gemma-3 1B Q4_K_M via Nexa SDK (Qualcomm NPU required). 8k context. NOT compatible with Exynos/MTK chips. Use LiteRT versions below instead. (769MB)",
             url = "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/main/google_gemma-3-1b-it-Q4_K_M.gguf?download=true",
             category = "text",
             sizeBytes = 806518784L, // 769 MB (actual HF size)

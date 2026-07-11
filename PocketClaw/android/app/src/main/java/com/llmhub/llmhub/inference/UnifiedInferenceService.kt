@@ -16,14 +16,19 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     private val mediaPipeService = MediaPipeInferenceService(context)
     private val onnxService = OnnxInferenceService(context)
     private val nexaService = NexaInferenceService(context)
+
+    /** Whether the Nexa backend (for GGUF models) is usable on this device. */
+    fun isNexaAvailable(): Boolean =
+        (nexaService as? com.llmhub.llmhub.inference.NexaInferenceService)?.isAvailable() == true
     
     private var currentService: InferenceService = mediaPipeService
     private var currentModel: LLMModel? = null
 
     override suspend fun loadModel(model: LLMModel, preferredBackend: LlmInference.Backend?, deviceId: String?): Boolean {
         // Determine which service to use initially
-        if (model.modelFormat == "gguf" && (nexaService as? com.llmhub.llmhub.inference.NexaInferenceService)?.isAvailable() != true) {
-            throw AllBackendsFailedException("GGUF models require the Nexa SDK which is not available on this device")
+        if (model.modelFormat == "gguf" && !isNexaAvailable()) {
+            android.util.Log.w("UnifiedInferenceService", "Nexa SDK unavailable - cannot load GGUF model. Use a MediaPipe (.task) model instead.")
+            throw AllBackendsFailedException("GGUF backend unavailable on this device. Please use a MediaPipe (.task) model.")
         }
         val targetService = when (model.modelFormat) {
             "onnx" -> onnxService
@@ -73,8 +78,9 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
         disableAudio: Boolean,
         deviceId: String?
     ): Boolean {
-        if (model.modelFormat == "gguf" && (nexaService as? com.llmhub.llmhub.inference.NexaInferenceService)?.isAvailable() != true) {
-            throw AllBackendsFailedException("GGUF models require the Nexa SDK which is not available on this device")
+        if (model.modelFormat == "gguf" && !isNexaAvailable()) {
+            android.util.Log.w("UnifiedInferenceService", "Nexa SDK unavailable - cannot load GGUF model. Use a MediaPipe (.task) model instead.")
+            throw AllBackendsFailedException("GGUF backend unavailable on this device. Please use a MediaPipe (.task) model.")
         }
         val targetService = when (model.modelFormat) {
             "onnx" -> onnxService
@@ -149,7 +155,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     override suspend fun onCleared() {
         mediaPipeService.onCleared()
         onnxService.onCleared()
-        if ((nexaService as? com.llmhub.llmhub.inference.NexaInferenceService)?.isAvailable() == true) {
+        if (isNexaAvailable()) {
             nexaService.onCleared()
         }
     }
@@ -173,7 +179,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     override fun setGenerationParameters(maxTokens: Int?, topK: Int?, topP: Float?, temperature: Float?, nGpuLayers: Int?, enableThinking: Boolean?) {
         mediaPipeService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
         onnxService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
-        if ((nexaService as? com.llmhub.llmhub.inference.NexaInferenceService)?.isAvailable() == true) {
+        if (isNexaAvailable()) {
             nexaService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
         }
     }
@@ -193,7 +199,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     override fun getEffectiveMaxTokens(model: LLMModel): Int {
         return when (model.modelFormat) {
             "onnx" -> onnxService.getEffectiveMaxTokens(model)
-            "gguf" -> if ((nexaService as? com.llmhub.llmhub.inference.NexaInferenceService)?.isAvailable() == true) nexaService.getEffectiveMaxTokens(model) else mediaPipeService.getEffectiveMaxTokens(model)
+            "gguf" -> if (isNexaAvailable()) nexaService.getEffectiveMaxTokens(model) else mediaPipeService.getEffectiveMaxTokens(model)
             else -> mediaPipeService.getEffectiveMaxTokens(model)
         }
     }

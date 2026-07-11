@@ -133,10 +133,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 val downloaded = models.filter { it.isDownloaded }
                 if (downloaded.isNotEmpty()) {
-                    val model = downloaded.first()
+                    // On devices without Nexa SDK (e.g. Exynos), prefer MediaPipe-compatible formats
+                    val unified = inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
+                    val nexaAvailable = unified?.isNexaAvailable() ?: false
+                    val sorted = if (nexaAvailable) {
+                        downloaded // any format is fine
+                    } else {
+                        // Prefer .task / .litertlm (MediaPipe) over .gguf (Nexa)
+                        downloaded.sortedBy { if (it.modelFormat == "gguf") 1 else 0 }
+                    }
+                    val model = sorted.first()
                     currentModel = model
                     _currentModelName.value = model.name
-                    Log.d(TAG, "Loading model: ${model.name}")
+                    Log.d(TAG, "Loading model: ${model.name} (format=${model.modelFormat}, nexa=$nexaAvailable)")
                     val ok = inferenceService.loadModel(model)
                     _isModelLoaded.value = ok
                     if (ok) Log.d(TAG, "Model loaded: ${model.name}")
@@ -560,7 +569,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (downloaded.isEmpty()) {
             throw Exception("No downloaded models found after download")
         }
-        val model = downloaded.first()
+        // On devices without Nexa SDK, prefer MediaPipe-compatible formats
+        val unified = inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
+        val nexaAvailable = unified?.isNexaAvailable() ?: false
+        val sorted = if (nexaAvailable) {
+            downloaded
+        } else {
+            downloaded.sortedBy { if (it.modelFormat == "gguf") 1 else 0 }
+        }
+        val model = sorted.first()
         currentModel = model
         withContext(Dispatchers.Main) {
             _currentModelName.value = model.name

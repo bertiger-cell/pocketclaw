@@ -39,6 +39,10 @@ fun SettingsScreen(
     onOpenNotificationSettings: () -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     onRequestStoragePermission: () -> Unit,
+    isDownloading: Boolean = false,
+    downloadProgress: Float = 0f,
+    downloadStatus: String = "",
+    onDownloadModel: (String, String) -> Unit = { _, _ -> },
 ) {
     var sttEnabled by remember { mutableStateOf(Preferences.sttEnabled) }
     var ttsEnabled by remember { mutableStateOf(Preferences.ttsEnabled) }
@@ -129,6 +133,51 @@ fun SettingsScreen(
                     leadingIcon = { if (llmMode == "api") Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) },
                     colors = FilterChipDefaults.filterChipColors(selectedContainerColor = CrabOrangeDark, selectedLabelColor = DarkTextPrimary),
                 )
+            }
+            if (llmMode == "local") {
+                HorizontalDivider(color = colors.surface, thickness = 1.dp)
+                if (isDownloading) {
+                    // Show download progress
+                    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Text(
+                            text = downloadStatus,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.textSecondary,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LinearProgressIndicator(
+                            progress = { downloadProgress },
+                            modifier = Modifier.fillMaxWidth().height(6.dp),
+                            color = CrabOrange,
+                            trackColor = colors.surface,
+                        )
+                    }
+                } else {
+                    // Show download buttons
+                    SettingsItem(
+                        icon = Icons.Default.CloudDownload, title = "Download Qwen3 (Q4_K_M)",
+                        subtitle = "1.2 GB – Recommended for most devices",
+                        onClick = {
+                            onDownloadModel(
+                                "https://huggingface.co/bartowski/Qwen_Qwen3-1.7B-GGUF/resolve/main/Qwen_Qwen3-1.7B-Q4_K_M.gguf?download=true",
+                                "Qwen_Qwen3-1.7B-Q4_K_M.gguf"
+                            )
+                        },
+                        colors = colors,
+                    )
+                    HorizontalDivider(color = colors.surface, thickness = 1.dp)
+                    SettingsItem(
+                        icon = Icons.Default.CloudDownload, title = "Download Gemma-3 (Q4_K_M)",
+                        subtitle = "769 MB – Fastest, great for older devices",
+                        onClick = {
+                            onDownloadModel(
+                                "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/main/google_gemma-3-1b-it-Q4_K_M.gguf?download=true",
+                                "google_gemma-3-1b-it-Q4_K_M.gguf"
+                            )
+                        },
+                        colors = colors,
+                    )
+                }
             }
             if (llmMode == "api") {
                 HorizontalDivider(color = colors.surface, thickness = 1.dp)

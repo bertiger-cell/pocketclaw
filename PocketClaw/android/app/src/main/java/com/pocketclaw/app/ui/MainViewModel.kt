@@ -71,6 +71,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isModelLoaded = MutableStateFlow(false)
     val isModelLoaded: StateFlow<Boolean> = _isModelLoaded.asStateFlow()
 
+    // Download state
+    private val _isDownloading = MutableStateFlow(false)
+    val isDownloading: StateFlow<Boolean> = _isDownloading.asStateFlow()
+
+    private val _downloadProgress = MutableStateFlow(0f)
+    val downloadProgress: StateFlow<Float> = _downloadProgress.asStateFlow()
+
+    private val _downloadStatus = MutableStateFlow("")
+    val downloadStatus: StateFlow<String> = _downloadStatus.asStateFlow()
+
     private val _currentModelName = MutableStateFlow("")
     val currentModelName: StateFlow<String> = _currentModelName.asStateFlow()
 
@@ -457,6 +467,72 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleTask(task: ScheduledTask) {
         viewModelScope.launch(Dispatchers.IO) {
             app.database.scheduledTaskDao().setEnabled(task.id, !task.enabled)
+        }
+    }
+
+    fun downloadModel(url: String, fileName: String) {
+        if (_isDownloading.value) return
+        _isDownloading.value = true
+        _downloadProgress.value = 0f
+        _downloadStatus.value = "Starting download..."
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val modelsDir = java.io.File(app.filesDir, "models")
+                if (!modelsDir.exists()) modelsDir.mkdirs()
+                val targetFile = java.io.File(modelsDir, fileName)
+
+                val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                conn.connectTimeout = 15_000
+                conn.readTimeout = 30_000
+                conn.setRequestProperty("User-Agent", "PocketClaw/1.0")
+                conn.connect()
+
+                val totalBytes = conn.contentLength.toLong()
+                withContext(Dispatchers.Main) {
+                    _downloadStatus.value = "Downloading... (0%)"
+                }
+
+                conn.inputStream.use { input ->
+                    java.io.FileOutputStream(targetFile).use { output ->
+                        val buffer = ByteArray(8192)
+                        var downloadedBytes = 0L
+                        var bytesRead: Int
+                        while (input.read(buffer).also { bytesRead = it } != -1) {
+                            output.write(buffer, 0, bytesRead)
+                            downloadedBytes += bytesRead
+                            if (totalBytes > 0) {
+                                val progress = downloadedBytes.toFloat() / totalBytes
+                                withContext(Dispatchers.Main) {
+                                    _downloadProgress.value = progress
+                                    val pct = (progress * 100).toInt()
+                                    val mb = downloadedBytes / (1024 * 1024)
+                                    val total = totalBytes / (1024 * 1024)
+                                    _downloadStatus.value = "Downloading... ${mb}/${total} MB ($pct%)"
+                                }
+                            }
+                        }
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    _downloadStatus.value = "Download complete!"
+                    _downloadProgress.value = 1f
+                    _isDownloading.value = false
+                    Toast.makeText(app, "Model downloaded! Restarting...", Toast.LENGTH_LONG).show()
+                }
+
+                // Reload model
+                loadFirstAvailableModel()
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Download failed: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    _downloadStatus.value = "Download failed: ${e.message}"
+                    _isDownloading.value = false
+                    Toast.makeText(app, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 

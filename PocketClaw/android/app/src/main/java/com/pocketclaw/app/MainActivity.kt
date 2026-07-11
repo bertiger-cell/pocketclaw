@@ -57,6 +57,9 @@ class MainActivity : ComponentActivity() {
         val llmMode by viewModel.llmMode.collectAsState()
         val llmReady by viewModel.llmReady.collectAsState()
         val inputText by viewModel.inputText.collectAsState()
+        val isDownloading by viewModel.isDownloading.collectAsState()
+        val downloadProgress by viewModel.downloadProgress.collectAsState()
+        val downloadStatus by viewModel.downloadStatus.collectAsState()
 
         var selectedTab by remember { mutableIntStateOf(0) }
         val colors = AppColors
@@ -117,6 +120,10 @@ class MainActivity : ComponentActivity() {
                                 startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
                             }
                         },
+                        isDownloading = isDownloading,
+                        downloadProgress = downloadProgress,
+                        downloadStatus = downloadStatus,
+                        onDownloadModel = viewModel::downloadModel,
                     )
                 }
             }

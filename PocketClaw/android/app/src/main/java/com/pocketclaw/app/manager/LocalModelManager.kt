@@ -22,26 +22,26 @@ object LocalModelManager {
         
         // /sdcard/Download/
         paths.add(Pair(
-            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/qwen3-1.7b-instruct-q8_0.gguf",
-            "📥 Downloads/qwen3-1.7b-instruct-q8_0.gguf"
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/Qwen3-1.7B-Q8_0.gguf",
+            "📥 Downloads/Qwen3-1.7B-Q8_0.gguf"
         ))
         
         // /sdcard/Documents/models/
         paths.add(Pair(
-            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)}/models/qwen3-1.7b-instruct-q8_0.gguf",
-            "📄 Documents/models/qwen3-1.7b-instruct-q8_0.gguf"
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)}/models/Qwen3-1.7B-Q8_0.gguf",
+            "📄 Documents/models/Qwen3-1.7B-Q8_0.gguf"
         ))
         
         // /sdcard/models/
         paths.add(Pair(
-            "${Environment.getExternalStorageDirectory()}/models/qwen3-1.7b-instruct-q8_0.gguf",
-            "📁 /models/qwen3-1.7b-instruct-q8_0.gguf"
+            "${Environment.getExternalStorageDirectory()}/models/Qwen3-1.7B-Q8_0.gguf",
+            "📁 /models/Qwen3-1.7B-Q8_0.gguf"
         ))
         
         // /storage/emulated/0/PocketClaw/models/
         paths.add(Pair(
-            "${Environment.getExternalStorageDirectory()}/PocketClaw/models/qwen3-1.7b-instruct-q8_0.gguf",
-            "🦞 PocketClaw/models/qwen3-1.7b-instruct-q8_0.gguf"
+            "${Environment.getExternalStorageDirectory()}/PocketClaw/models/Qwen3-1.7B-Q8_0.gguf",
+            "🦞 PocketClaw/models/Qwen3-1.7B-Q8_0.gguf"
         ))
         
         return paths

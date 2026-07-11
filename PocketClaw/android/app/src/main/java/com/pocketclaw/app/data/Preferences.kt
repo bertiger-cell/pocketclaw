@@ -64,4 +64,8 @@ object Preferences {
     var discordToken: String
         get() = if (::prefs.isInitialized) prefs.getString("discord_token", "") ?: "" else ""
         set(value) { if (::prefs.isInitialized) prefs.edit().putString("discord_token", value).apply() }
+
+    var groqApiKey: String
+        get() = if (::prefs.isInitialized) prefs.getString("groq_api_key", "") ?: "" else ""
+        set(value) { if (::prefs.isInitialized) prefs.edit().putString("groq_api_key", value).apply() }
 }

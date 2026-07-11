@@ -43,6 +43,7 @@ fun SettingsScreen(
     var sttEnabled by remember { mutableStateOf(Preferences.sttEnabled) }
     var ttsEnabled by remember { mutableStateOf(Preferences.ttsEnabled) }
     var showApiKeyDialog by remember { mutableStateOf(false) }
+    var showGroqApiKeyDialog by remember { mutableStateOf(false) }
     var showMessagingDialog by remember { mutableStateOf(false) }
     var showCreateTaskDialog by remember { mutableStateOf(false) }
     var showAuditLog by remember { mutableStateOf(false) }
@@ -133,9 +134,15 @@ fun SettingsScreen(
             if (llmMode == "api") {
                 HorizontalDivider(color = colors.surface, thickness = 1.dp)
                 SettingsItem(
-                    icon = Icons.Default.Key, title = "API Key",
+                    icon = Icons.Default.Key, title = "DashScope API Key",
                     subtitle = if (Preferences.dashScopeApiKey.isNotBlank()) "••••${Preferences.dashScopeApiKey.takeLast(6)}" else "Not set",
                     onClick = { showApiKeyDialog = true }, colors = colors,
+                )
+                HorizontalDivider(color = colors.surface, thickness = 1.dp)
+                SettingsItem(
+                    icon = Icons.Default.Cloud, title = "Groq API Key",
+                    subtitle = if (Preferences.groqApiKey.isNotBlank()) "••••${Preferences.groqApiKey.takeLast(6)}" else "Free tier - groq.com",
+                    onClick = { showGroqApiKeyDialog = true }, colors = colors,
                 )
             }
         }
@@ -380,16 +387,22 @@ private fun SettingsToggle(
 }
 
 @Composable
-private fun ApiKeyDialog(onDismiss: () -> Unit, onSave: (String) -> Unit) {
-    var key by remember { mutableStateOf(Preferences.dashScopeApiKey) }
+private fun ApiKeyDialog(
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+    currentKey: String = Preferences.dashScopeApiKey,
+    title: String = "API Key",
+    hint: String = "Enter your API key"
+) {
+    var key by remember { mutableStateOf(currentKey) }
     val colors = AppColors
     AlertDialog(
         onDismissRequest = onDismiss, containerColor = colors.card,
-        title = { Text("DashScope API Key", color = colors.textPrimary) },
+        title = { Text(title, color = colors.textPrimary) },
         text = {
             OutlinedTextField(
                 value = key, onValueChange = { key = it },
-                label = { Text("API Key") }, singleLine = true,
+                label = { Text(hint) }, singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = CrabOrange, unfocusedBorderColor = colors.textMuted,
                     cursorColor = CrabOrange, focusedTextColor = colors.textPrimary,

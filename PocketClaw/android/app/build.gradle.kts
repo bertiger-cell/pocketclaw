@@ -174,6 +174,8 @@ dependencies {
     implementation("ai.nexa:core:0.0.24") {
         exclude(group = "com.microsoft.onnxruntime")
     }
+    // LiteRT-LM (for .litertlm format models like Qwen3-1.7B)
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.14.0")
 
     // Testing
     testImplementation(libs.junit)

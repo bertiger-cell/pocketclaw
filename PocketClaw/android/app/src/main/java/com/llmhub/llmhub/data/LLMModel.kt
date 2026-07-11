@@ -26,5 +26,6 @@ data class LLMModel(
     var downloadProgress: Float = 0f,
     var downloadedBytes: Long = 0L,
     var totalBytes: Long? = null,
-    var downloadSpeedBytesPerSec: Long? = null
+    var downloadSpeedBytesPerSec: Long? = null,
+    val groqModelId: String? = null, // Groq API model ID for cloud models
 )

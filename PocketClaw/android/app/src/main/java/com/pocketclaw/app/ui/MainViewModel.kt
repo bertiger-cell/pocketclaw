@@ -74,6 +74,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentModelName = MutableStateFlow("")
     val currentModelName: StateFlow<String> = _currentModelName.asStateFlow()
 
+    private val _availableModels = MutableStateFlow<List<LLMModel>>(emptyList())
+    val availableModels: StateFlow<List<LLMModel>> = _availableModels.asStateFlow()
+
     private val _llmMode = MutableStateFlow(Preferences.llmMode)
     val llmMode: StateFlow<String> = _llmMode.asStateFlow()
 
@@ -107,6 +110,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val auditEntries: List<AuditLog.Entry> get() = app.auditLog.recent()
 
     init {
+        loadAvailableModels()
         if (Preferences.llmMode == "local") {
             loadFirstAvailableModel()
         } else {
@@ -118,6 +122,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun loadFirstAvailableModel() {
         viewModelScope.launch {
             try {
+                // Initialize Groq API key
+                val unified = inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
+                if (Preferences.groqApiKey.isNotBlank()) {
+                    unified?.groqService?.setApiKey(Preferences.groqApiKey)
+                }
+
                 val models = withContext(Dispatchers.IO) {
                     ModelRepository.getAvailableModels(app)
                 }
@@ -138,6 +148,51 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 Log.e(TAG, "Model loading failed: ${e.message}", e)
             }
         }
+    }
+
+    private fun loadAvailableModels() {
+        viewModelScope.launch {
+            try {
+                val models = withContext(Dispatchers.IO) {
+                    ModelRepository.getAvailableModels(app)
+                }
+                _availableModels.value = models
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load available models: ${e.message}", e)
+            }
+        }
+    }
+
+    fun selectModel(model: LLMModel) {
+        viewModelScope.launch {
+            try {
+                _isProcessing.value = true
+                val success = inferenceService.loadModel(model)
+                if (success) {
+                    currentModel = model
+                    _currentModelName.value = model.name
+                    _isModelLoaded.value = true
+                    _llmMode.value = if (model.modelFormat == "groq") "api" else "local"
+                    Preferences.llmMode = _llmMode.value
+                    Log.d(TAG, "Switched to model: ${model.name}")
+                } else {
+                    Log.w(TAG, "Failed to load model: ${model.name}")
+                    _messages.update { it + ChatMessage(text = "Fehler: Modell ${model.name} konnte nicht geladen werden.", isUser = false) }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Model switch failed: ${e.message}", e)
+                _messages.update { it + ChatMessage(text = "Fehler beim Wechseln: ${e.message}", isUser = false) }
+            } finally {
+                _isProcessing.value = false
+            }
+        }
+    }
+
+    fun setGroqApiKey(key: String) {
+        Preferences.groqApiKey = key
+        val unified = app.inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
+        unified?.groqService?.setApiKey(key)
+        Log.d(TAG, "Groq API key saved and set")
     }
 
     private fun initializeChat() {

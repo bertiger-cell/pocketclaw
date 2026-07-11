@@ -16,18 +16,26 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     private val mediaPipeService = MediaPipeInferenceService(context)
     private val onnxService = OnnxInferenceService(context)
     private val nexaService = NexaInferenceService(context)
-    
+    private val liteRTLMService = LiteRTLMInferenceService(context)
+    val groqService = GroqInferenceService(context)
+
+    /** Whether the Nexa backend (for GGUF models) is usable on this device. */
+    fun isNexaAvailable(): Boolean =
+        (nexaService as? NexaInferenceService)?.isAvailable() == true
+
     private var currentService: InferenceService = mediaPipeService
     private var currentModel: LLMModel? = null
 
     override suspend fun loadModel(model: LLMModel, preferredBackend: LlmInference.Backend?, deviceId: String?): Boolean {
         // Determine which service to use initially
-        if (model.modelFormat == "gguf" && (nexaService as? com.llmhub.llmhub.inference.NexaInferenceService)?.isAvailable() != true) {
-            throw AllBackendsFailedException("GGUF models require the Nexa SDK which is not available on this device")
+        if (model.modelFormat == "gguf" && !isNexaAvailable()) {
+            throw AllBackendsFailedException("GGUF backend unavailable on this device.")
         }
         val targetService = when (model.modelFormat) {
             "onnx" -> onnxService
             "gguf" -> nexaService
+            "litertlm" -> liteRTLMService
+            "groq" -> groqService
             else -> mediaPipeService
         }
 
@@ -73,12 +81,14 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
         disableAudio: Boolean,
         deviceId: String?
     ): Boolean {
-        if (model.modelFormat == "gguf" && (nexaService as? com.llmhub.llmhub.inference.NexaInferenceService)?.isAvailable() != true) {
-            throw AllBackendsFailedException("GGUF models require the Nexa SDK which is not available on this device")
+        if (model.modelFormat == "gguf" && !isNexaAvailable()) {
+            throw AllBackendsFailedException("GGUF backend unavailable on this device.")
         }
         val targetService = when (model.modelFormat) {
             "onnx" -> onnxService
             "gguf" -> nexaService
+            "litertlm" -> liteRTLMService
+            "groq" -> groqService
             else -> mediaPipeService
         }
 
@@ -149,7 +159,8 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     override suspend fun onCleared() {
         mediaPipeService.onCleared()
         onnxService.onCleared()
-        if ((nexaService as? com.llmhub.llmhub.inference.NexaInferenceService)?.isAvailable() == true) {
+        liteRTLMService.onCleared()
+        if (isNexaAvailable()) {
             nexaService.onCleared()
         }
     }
@@ -173,7 +184,9 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     override fun setGenerationParameters(maxTokens: Int?, topK: Int?, topP: Float?, temperature: Float?, nGpuLayers: Int?, enableThinking: Boolean?) {
         mediaPipeService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
         onnxService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
-        if ((nexaService as? com.llmhub.llmhub.inference.NexaInferenceService)?.isAvailable() == true) {
+        liteRTLMService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
+        groqService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
+        if (isNexaAvailable()) {
             nexaService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
         }
     }
@@ -193,7 +206,9 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     override fun getEffectiveMaxTokens(model: LLMModel): Int {
         return when (model.modelFormat) {
             "onnx" -> onnxService.getEffectiveMaxTokens(model)
-            "gguf" -> if ((nexaService as? com.llmhub.llmhub.inference.NexaInferenceService)?.isAvailable() == true) nexaService.getEffectiveMaxTokens(model) else mediaPipeService.getEffectiveMaxTokens(model)
+            "gguf" -> if (isNexaAvailable()) nexaService.getEffectiveMaxTokens(model) else mediaPipeService.getEffectiveMaxTokens(model)
+            "litertlm" -> liteRTLMService.getEffectiveMaxTokens(model)
+            "groq" -> groqService.getEffectiveMaxTokens(model)
             else -> mediaPipeService.getEffectiveMaxTokens(model)
         }
     }

@@ -57,6 +57,36 @@ object DeviceInfo {
 
 object ModelData {
     val models = listOf(
+        // Qwen3-1.7B (LiteRT-LM) - Local on-device
+        LLMModel(
+            name = "Qwen3-1.7B (LiteRT-LM)",
+            description = "Alibaba Qwen3-1.7B via LiteRT-LM. Works on ALL Android devices including Exynos. No special NPU required. (~2.1GB download)",
+            url = "https://huggingface.co/litert-community/Qwen3-1.7B/resolve/main/Qwen3_1.7B.litertlm?download=true",
+            category = "text",
+            sizeBytes = 2254857830L,
+            source = "Alibaba via litert-community",
+            supportsVision = false,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 3, recommendedRamGB = 4),
+            contextWindowSize = 32768,
+            modelFormat = "litertlm"
+        ),
+        // Qwen3-1.7B via Groq Cloud API (free tier)
+        LLMModel(
+            name = "Qwen3-1.7B (Groq Cloud)",
+            description = "Alibaba Qwen3-1.7B via Groq free cloud API. Fast inference, no download needed. Requires internet + free Groq API key.",
+            url = "groq://qwen/qwen3-1.7b",
+            category = "text",
+            sizeBytes = 0L,
+            source = "Groq Cloud (free tier)",
+            supportsVision = false,
+            supportsGpu = false,
+            requirements = ModelRequirements(minRamGB = 1, recommendedRamGB = 2),
+            contextWindowSize = 32768,
+            modelFormat = "groq",
+            groqModelId = "qwen/qwen3-1.7b"
+        ),
+
         // Gemma-3 1B Models
         LLMModel(
             name = "Gemma-3 1B (INT4, 2k)",

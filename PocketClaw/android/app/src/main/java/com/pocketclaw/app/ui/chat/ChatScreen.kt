@@ -19,6 +19,8 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pocketclaw.app.R
+import com.llmhub.llmhub.data.LLMModel
 import com.pocketclaw.app.ui.theme.*
 import java.time.Instant
 import java.time.ZoneId
@@ -59,9 +62,14 @@ fun ChatScreen(
     onNewTopic: () -> Unit,
     onDeleteMessage: (ChatMessage) -> Unit,
     onSpeakMessage: (String) -> Unit,
+    availableModels: List<LLMModel> = emptyList(),
+    selectedModel: LLMModel? = null,
+    onSelectModel: (LLMModel) -> Unit = {},
+    currentModelName: String = "",
 ) {
     val listState = rememberLazyListState()
     val colors = AppColors
+    var showModelDropdown by remember { mutableStateOf(false) }
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
@@ -82,6 +90,78 @@ fun ChatScreen(
                 .fillMaxWidth()
                 .padding(top = 12.dp, bottom = 4.dp)
         )
+
+        // Model selector
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 2.dp)
+        ) {
+            OutlinedButton(
+                onClick = { showModelDropdown = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = colors.primary
+                ),
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Icon(
+                    Icons.Default.SmartToy,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = if (currentModelName.isNotBlank()) "Modell: $currentModelName" else "Modell wählen...",
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+
+            DropdownMenu(
+                expanded = showModelDropdown,
+                onDismissRequest = { showModelDropdown = false }
+            ) {
+                availableModels.forEach { model ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(
+                                    text = model.name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (model.name == currentModelName) FontWeight.Bold else FontWeight.Normal
+                                )
+                                Text(
+                                    text = when (model.modelFormat) {
+                                        "groq" -> "☁️ Cloud (Groq)"
+                                        "litertlm" -> "📱 Lokal (LiteRT-LM)"
+                                        else -> "📱 Lokal (${model.modelFormat})"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = colors.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        },
+                        onClick = {
+                            showModelDropdown = false
+                            onSelectModel(model)
+                        },
+                        leadingIcon = {
+                            if (model.name == currentModelName) {
+                                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                            }
+                        }
+                    )
+                }
+            }
+        }
 
         LazyColumn(
             state = listState,

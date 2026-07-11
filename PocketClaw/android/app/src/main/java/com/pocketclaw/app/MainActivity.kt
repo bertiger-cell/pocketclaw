@@ -86,6 +86,10 @@ class MainActivity : ComponentActivity() {
                         onNewTopic = viewModel::newTopic,
                         onDeleteMessage = viewModel::deleteMessage,
                         onSpeakMessage = viewModel::speakMessage,
+                        availableModels = viewModel.availableModels.collectAsState().value,
+                        selectedModel = null,
+                        onSelectModel = viewModel::selectModel,
+                        currentModelName = viewModel.currentModelName.collectAsState().value,
                     )
                     1 -> MemoryScreen(
                         memories = viewModel.memories.collectAsState().value,

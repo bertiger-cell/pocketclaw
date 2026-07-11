@@ -130,6 +130,12 @@ class MainActivity : ComponentActivity() {
                         onSetGroqApiKey = viewModel::setGroqApiKey,
                         onSetGroqModel = viewModel::setGroqModel,
                         selectedGroqModel = viewModel.selectedGroqModel.collectAsState().value,
+                        localModels = viewModel.availableModels.collectAsState().value.filter { it.modelFormat == "litertlm" || it.modelFormat == "gguf" },
+                        modelDownloads = viewModel.modelDownloads.collectAsState().value,
+                        modelLoading = viewModel.modelLoading.collectAsState().value,
+                        lastError = viewModel.lastError.collectAsState().value,
+                        onDownloadModel = viewModel::downloadModel,
+                        onLoadLocalModel = viewModel::loadLocalModel,
                     )
                 }
             }

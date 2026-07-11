@@ -117,14 +117,42 @@ class LiteRTLMInferenceService(private val context: Context) : InferenceService 
 
     override suspend fun generateResponseStream(prompt: String, model: LLMModel): Flow<String> {
         return flow {
-            val conv = conversation ?: throw IllegalStateException("No conversation loaded")
+            var conv = conversation
+            if (conv == null) {
+                // Try to reinitialize
+                Log.w(TAG, "Conversation was null, attempting recovery via loadModel")
+                engine?.let { eng ->
+                    try {
+                        val samplerConfig = SamplerConfig(
+                            topK = 40, topP = 0.95, temperature = 0.8,
+                        )
+                        conv = eng.createConversation(
+                            ConversationConfig(samplerConfig = samplerConfig)
+                        )
+                        conversation = conv
+                        Log.i(TAG, "Conversation reinitialized successfully")
+                    } catch (reinitError: Exception) {
+                        Log.e(TAG, "Failed to reinitialize conversation: ${reinitError.message}")
+                        emit("❌ Modell nicht geladen. Bitte Modell neu laden.")
+                        return@flow
+                    }
+                } ?: run {
+                    emit("❌ Kein Modell geladen. Bitte zuerst ein Modell downloaden und laden.")
+                    return@flow
+                }
+            }
             try {
-                conv.sendMessageAsync(prompt).collect { message ->
-                    emit(message.toString())
+                conv!!.sendMessageAsync(prompt).collect { message ->
+                    val text = message.toString()
+                    if (text.isNotBlank()) {
+                        emit(text)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error in generateResponseStream: ${e.message}", e)
-                throw e
+                emit("
+
+[Fehler: ${e.message}]")
             }
         }
     }
@@ -144,9 +172,14 @@ class LiteRTLMInferenceService(private val context: Context) : InferenceService 
     override suspend fun resetChatSession(chatId: String) {
         sessionResetTimes[chatId] = System.currentTimeMillis()
         try {
-            conversation?.close()
+            val oldConv = conversation
             conversation = null
-            val currentEngine = engine ?: return
+            try { oldConv?.close() } catch (_: Exception) {}
+            val currentEngine = engine
+            if (currentEngine == null) {
+                Log.w(TAG, "Cannot reset session: engine is null")
+                return
+            }
             val samplerConfig = SamplerConfig(
                 topK = overrideTopK ?: 40,
                 topP = (overrideTopP ?: 0.95f).toDouble(),

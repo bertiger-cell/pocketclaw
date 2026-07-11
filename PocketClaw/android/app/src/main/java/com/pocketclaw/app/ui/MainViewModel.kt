@@ -32,6 +32,8 @@ import com.pocketclaw.claw.tools.ToolParser
 import com.pocketclaw.claw.tools.ToolRegistry
 import com.pocketclaw.claw.tools.ToolResult
 import com.pocketclaw.app.ui.chat.ChatMessage
+import com.llmhub.llmhub.data.ModelDownloader
+import com.llmhub.llmhub.data.DownloadStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -118,6 +120,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _selectedGroqModel = MutableStateFlow("llama-3.3-70b-versatile")
     val selectedGroqModel: StateFlow<String> = _selectedGroqModel.asStateFlow()
+
+    // Generic model download state
+    data class ModelDownloadState(
+        val isDownloading: Boolean = false,
+        val progress: Float = 0f,
+        val downloaded: Boolean = false,
+        val modelId: String = "",
+    )
+    private val _modelDownloads = MutableStateFlow<Map<String, ModelDownloadState>>(emptyMap())
+    val modelDownloads: StateFlow<Map<String, ModelDownloadState>> = _modelDownloads.asStateFlow()
+
+    // Animation triggers
+    private val _modelLoading = MutableStateFlow(false)
+    val modelLoading: StateFlow<Boolean> = _modelLoading.asStateFlow()
+
+    private val _lastError = MutableStateFlow<String?>(null)
+    val lastError: StateFlow<String?> = _lastError.asStateFlow()
 
     val auditEntries: List<AuditLog.Entry> get() = app.auditLog.recent()
 
@@ -224,88 +243,90 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun downloadQwenModel() {
-        viewModelScope.launch {
-            _qwenDownloading.value = true
-            _qwenProgress.value = 0f
-            try {
-                // Check if already downloaded
-                val models = withContext(Dispatchers.IO) {
-                    ModelRepository.getAvailableModels(app)
-                }
-                val qwenModel = models.find { it.modelFormat == "litertlm" && it.name.contains("Qwen3") }
-                if (qwenModel != null && qwenModel.isDownloaded) {
-                    _qwenDownloaded.value = true
-                    _qwenDownloading.value = false
-                    return@launch
-                }
-                // Find the Qwen3-1.7B model definition
-                val modelDef = com.llmhub.llmhub.data.ModelData.models.find {
-                    it.modelFormat == "litertlm" && it.name.contains("Qwen3")
-                }
-                if (modelDef == null) {
-                    _qwenDownloading.value = false
-                    _messages.update { it + ChatMessage(text = "Qwen3-1.7B LiteRT-LM Modell nicht gefunden.", isUser = false) }
-                    return@launch
-                }
-                val modelsDir = java.io.File(app.filesDir, "models")
-                modelsDir.mkdirs()
-                val targetFile = java.io.File(modelsDir, modelDef.localFileName())
+        val modelDef = com.llmhub.llmhub.data.ModelData.models.find {
+            it.modelFormat == "litertlm" && it.name.contains("Qwen3")
+        }
+        modelDef?.let { downloadModel(it) }
+    }
 
-                // Use OkHttp for proper HuggingFace LFS redirect handling
-                val client = okhttp3.OkHttpClient.Builder()
-                    .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                    .readTimeout(300, java.util.concurrent.TimeUnit.SECONDS)
-                    .followRedirects(true)
-                    .followSslRedirects(true)
-                    .build()
-                val request = okhttp3.Request.Builder()
-                    .url(modelDef.url)
-                    .addHeader("User-Agent", "PocketClaw/1.0")
-                    .build()
-                val response = withContext(Dispatchers.IO) {
-                    client.newCall(request).execute()
+    fun downloadModel(model: LLMModel) {
+        val modelId = model.name
+        if (_modelDownloads.value[modelId]?.isDownloading == true) return
+
+        viewModelScope.launch {
+            _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
+                isDownloading = true, progress = 0f, modelId = modelId
+            ))
+            _lastError.value = null
+            try {
+                val downloader = ModelDownloader(
+                    io.ktor.client.HttpClient(), app,
+                    com.pocketclaw.app.BuildConfig.HF_TOKEN.ifBlank { null },
+                )
+                downloader.downloadModel(model).collect { status ->
+                    val pct = if (status.totalBytes > 0)
+                        (status.downloadedBytes.toFloat() / status.totalBytes).coerceIn(0f, 1f) else 0f
+                    _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
+                        isDownloading = true, progress = pct, modelId = modelId
+                    ))
                 }
-                if (!response.isSuccessful) {
-                    _qwenDownloading.value = false
-                    _messages.update { it + ChatMessage(text = "Download Fehler: HTTP ${response.code}", isUser = false) }
-                    return@launch
-                }
-                val body = response.body ?: run {
-                    _qwenDownloading.value = false
-                    _messages.update { it + ChatMessage(text = "Download Fehler: leerer Response", isUser = false) }
-                    return@launch
-                }
-                val totalBytes = body.contentLength()
-                withContext(Dispatchers.IO) {
-                    body.byteStream().use { input ->
-                        java.io.FileOutputStream(targetFile).use { output ->
-                            val buffer = ByteArray(8192)
-                            var downloaded = 0L
-                            var read: Int
-                            while (input.read(buffer).also { read = it } != -1) {
-                                output.write(buffer, 0, read)
-                                downloaded += read
-                                if (totalBytes > 0) {
-                                    _qwenProgress.value = (downloaded.toFloat() / totalBytes).coerceIn(0f, 1f)
-                                }
-                            }
-                        }
-                    }
-                }
-                // Verify file was downloaded
-                if (targetFile.exists() && targetFile.length() > 10_000_000) {
-                    _qwenDownloaded.value = true
-                    _messages.update { it + ChatMessage(text = "Qwen3-1.7B heruntergeladen! (${targetFile.length() / 1_000_000} MB) ✓", isUser = false) }
+                // Verify
+                val modelsDir = java.io.File(app.filesDir, "models")
+                val targetFile = java.io.File(modelsDir, model.localFileName())
+                if (targetFile.exists() && targetFile.length() > 1_000_000) {
+                    _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
+                        downloaded = true, modelId = modelId
+                    ))
+                    _messages.update { it + ChatMessage(text = "${model.name} heruntergeladen! (${targetFile.length() / 1_000_000} MB) ✓", isUser = false) }
                     loadFirstAvailableModel()
                 } else {
                     targetFile.delete()
-                    _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: Datei zu klein (${targetFile.length()} bytes)", isUser = false) }
+                    _lastError.value = "Download fehlgeschlagen: Datei zu klein"
+                    _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name}", isUser = false) }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Download failed: ${e.message}", e)
-                _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${e.message}", isUser = false) }
+                Log.e(TAG, "Download failed for ${model.name}: ${e.message}", e)
+                _lastError.value = e.message
+                _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - ${e.message}", isUser = false) }
             } finally {
-                _qwenDownloading.value = false
+                _modelDownloads.value = _modelDownloads.value + (modelId to (_modelDownloads.value[modelId]?.copy(isDownloading = false) ?: ModelDownloadState(modelId = modelId)))
+            }
+        }
+    }
+
+    fun loadLocalModel(model: LLMModel) {
+        viewModelScope.launch {
+            _modelLoading.value = true
+            _lastError.value = null
+            try {
+                val success = inferenceService.loadModel(model, com.google.mediapipe.tasks.genai.llminference.LlmInference.Backend.GPU)
+                if (success) {
+                    currentModel = model
+                    _currentModelName.value = model.name
+                    _isModelLoaded.value = true
+                    _llmMode.value = "local"
+                    Preferences.llmMode = "local"
+                    _messages.update { it + ChatMessage(text = "✅ ${model.name} geladen!", isUser = false) }
+                } else {
+                    // Fallback to CPU
+                    val cpuSuccess = inferenceService.loadModel(model, com.google.mediapipe.tasks.genai.llminference.LlmInference.Backend.CPU)
+                    if (cpuSuccess) {
+                        currentModel = model
+                        _currentModelName.value = model.name
+                        _isModelLoaded.value = true
+                        _llmMode.value = "local"
+                        Preferences.llmMode = "local"
+                        _messages.update { it + ChatMessage(text = "✅ ${model.name} geladen (CPU-Modus)!", isUser = false) }
+                    } else {
+                        _lastError.value = "Modell konnte nicht geladen werden"
+                        _messages.update { it + ChatMessage(text = "❌ ${model.name} konnte nicht geladen werden", isUser = false) }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load model ${model.name}: ${e.message}", e)
+                _lastError.value = e.message
+            } finally {
+                _modelLoading.value = false
             }
         }
     }
@@ -767,6 +788,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun switchLlmMode(mode: String) {
         Preferences.llmMode = mode
         _llmMode.value = mode
+        _lastError.value = null
         when (mode) {
             "local" -> {
                 _currentModelName.value = currentModel?.name ?: "No model"

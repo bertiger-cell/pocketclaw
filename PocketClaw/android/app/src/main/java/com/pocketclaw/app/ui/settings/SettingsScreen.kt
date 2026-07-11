@@ -4,6 +4,8 @@ import android.os.Environment
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.animation.core.*
+import androidx.compose.animation.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -168,24 +170,86 @@ fun SettingsScreen(
             }
             if (llmMode == "local") {
                 HorizontalDivider(color = colors.surface, thickness = 1.dp)
-                if (qwenDownloaded) {
+                val availableLocal = localModels.filter { it.modelFormat == "litertlm" || it.modelFormat == "gguf" }
+                if (availableLocal.isEmpty()) {
                     SettingsItem(
-                        icon = Icons.Default.CheckCircle, title = "Qwen3-1.7B (LiteRT-LM)",
-                        subtitle = "Downloaded ✓",
+                        icon = Icons.Default.Info, title = "Keine lokalen Modelle",
+                        subtitle = "Wähle Groq Cloud oder lade Modelle herunter",
                         onClick = { }, colors = colors,
                     )
-                } else {
-                    SettingsItem(
-                        icon = Icons.Default.Download, title = "Qwen3-1.7B herunterladen",
-                        subtitle = if (qwenDownloading) "Lädt herunter... ${(qwenProgress * 100).toInt()}%" else "LiteRT-LM • 2.1 GB",
-                        onClick = { if (!qwenDownloading) onDownloadQwen() }, colors = colors,
-                    )
-                    if (qwenDownloading) {
-                        LinearProgressIndicator(
-                            progress = { qwenProgress },
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp),
-                            color = CrabOrange,
-                        )
+                }
+                availableLocal.forEach { model ->
+                    HorizontalDivider(color = colors.surface, thickness = 1.dp)
+                    val dlState = modelDownloads[model.name]
+                    val isDownloading = dlState?.isDownloading == true
+                    val isDownloaded = dlState?.downloaded == true || model.isDownloaded
+                    val progress = dlState?.progress ?: 0f
+
+                    if (isDownloaded) {
+                        Surface(
+                            onClick = { onLoadLocalModel(model) },
+                            color = colors.card,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(Icons.Default.CheckCircle, null, tint = AccentGreen, modifier = Modifier.size(24.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(model.name, style = MaterialTheme.typography.titleSmall, color = colors.textPrimary)
+                                    Text("${model.sizeBytes / 1_000_000} MB • ${model.modelFormat}", style = MaterialTheme.typography.bodySmall, color = colors.textSecondary)
+                                }
+                                if (modelLoading) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = CrabOrange)
+                                } else {
+                                    TextButton(onClick = { onLoadLocalModel(model) }) {
+                                        Text("Laden", color = CrabOrange)
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Surface(
+                            onClick = { if (!isDownloading) onDownloadModel(model) },
+                            color = colors.card,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(
+                                    Icons.Default.Download, null,
+                                    tint = if (isDownloading) CrabOrange else colors.textMuted,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(model.name, style = MaterialTheme.typography.titleSmall, color = colors.textPrimary)
+                                    Text(
+                                        if (isDownloading) "Lädt... ${(progress * 100).toInt()}%"
+                                        else "${model.sizeBytes / 1_000_000} MB • ${model.modelFormat}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (isDownloading) CrabOrange else colors.textSecondary,
+                                    )
+                                }
+                                if (isDownloading) {
+                                    CircularProgressIndicator(
+                                        progress = { progress },
+                                        modifier = Modifier.size(28.dp), strokeWidth = 3.dp,
+                                        color = CrabOrange, trackColor = colors.surface,
+                                    )
+                                } else {
+                                    TextButton(onClick = { onDownloadModel(model) }) {
+                                        Text("Download", color = CrabOrange)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -433,13 +497,14 @@ private fun SettingsSection(
 @Composable
 private fun SettingsItem(
     icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit, colors: AppColors,
+    titleColor: androidx.compose.ui.graphics.Color = colors.textPrimary,
 ) {
     Surface(onClick = onClick, color = colors.card) {
         Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = CrabOrange, modifier = Modifier.size(24.dp))
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium, color = colors.textPrimary)
+                Text(title, style = MaterialTheme.typography.titleMedium, color = titleColor)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.textSecondary, maxLines = 1)
             }
             Icon(Icons.Default.ChevronRight, null, tint = colors.textMuted)
@@ -456,7 +521,7 @@ private fun SettingsToggle(
         Icon(icon, null, tint = CrabOrange, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = colors.textPrimary)
+            Text(title, style = MaterialTheme.typography.titleMedium, color = titleColor)
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.textSecondary)
         }
         Switch(

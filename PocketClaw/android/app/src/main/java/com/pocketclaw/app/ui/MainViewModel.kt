@@ -33,6 +33,7 @@ import com.pocketclaw.claw.tools.ToolRegistry
 import com.pocketclaw.claw.tools.ToolResult
 import com.pocketclaw.app.ui.chat.ChatMessage
 import com.llmhub.llmhub.data.ModelDownloader
+import com.pocketclaw.app.BuildConfig
 import com.llmhub.llmhub.data.DownloadStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*

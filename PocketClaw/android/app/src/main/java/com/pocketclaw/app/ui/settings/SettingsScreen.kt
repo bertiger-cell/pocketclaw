@@ -129,20 +129,42 @@ fun SettingsScreen(
             }
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 FilterChip(
                     selected = llmMode == "local", onClick = { onSwitchLlmMode("local") },
-                    label = { Text("Local (Qwen3)") },
+                    label = { Text("Local") },
                     leadingIcon = { if (llmMode == "local") Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) },
                     colors = FilterChipDefaults.filterChipColors(selectedContainerColor = CrabOrangeDark, selectedLabelColor = DarkTextPrimary),
                 )
                 FilterChip(
+                    selected = llmMode == "groq", onClick = { onSwitchLlmMode("groq") },
+                    label = { Text("Groq Cloud") },
+                    leadingIcon = { if (llmMode == "groq") Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) },
+                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = CrabOrangeDark, selectedLabelColor = DarkTextPrimary),
+                )
+                FilterChip(
                     selected = llmMode == "api", onClick = { onSwitchLlmMode("api") },
-                    label = { Text("Cloud API") },
+                    label = { Text("DashScope") },
                     leadingIcon = { if (llmMode == "api") Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) },
                     colors = FilterChipDefaults.filterChipColors(selectedContainerColor = CrabOrangeDark, selectedLabelColor = DarkTextPrimary),
                 )
+            }
+            if (llmMode == "groq") {
+                HorizontalDivider(color = colors.surface, thickness = 1.dp)
+                SettingsItem(
+                    icon = Icons.Default.Cloud, title = "Groq API Key",
+                    subtitle = if (Preferences.groqApiKey.isNotBlank()) "Key: \u2022\u2022\u2022\u2022${Preferences.groqApiKey.takeLast(6)}" else "Kostenlos: console.groq.com",
+                    onClick = { showGroqApiKeyDialog = true }, colors = colors,
+                )
+                if (Preferences.groqApiKey.isNotBlank()) {
+                    HorizontalDivider(color = colors.surface, thickness = 1.dp)
+                    SettingsItem(
+                        icon = Icons.Default.SmartToy, title = "Modell w\u00e4hlen",
+                        subtitle = GROQ_FREE_MODELS.find { it.first == selectedGroqModel }?.second ?: selectedGroqModel,
+                        onClick = { showGroqModelDialog = true }, colors = colors,
+                    )
+                }
             }
             if (llmMode == "local") {
                 HorizontalDivider(color = colors.surface, thickness = 1.dp)

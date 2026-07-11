@@ -83,6 +83,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val llmReady: StateFlow<Boolean> = combine(_isModelLoaded, _llmMode) { loaded, mode ->
         when (mode) {
+            "groq" -> Preferences.groqApiKey.isNotBlank()
             "api" -> DashScopeProvider.isReady
             else -> loaded
         }
@@ -122,7 +123,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         loadAvailableModels()
-        if (Preferences.llmMode == "local") {
+        // Auto-set Groq model selection
+        _selectedGroqModel.value = Preferences.groqSelectedModel
+        if (Preferences.groqApiKey.isNotBlank()) {
+            // Groq key exists - use groq cloud mode
+            _llmMode.value = "groq"
+            Preferences.llmMode = "groq"
+            _currentModelName.value = "Groq: ${Preferences.groqSelectedModel}"
+            val unified = inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
+            unified?.groqService?.setApiKey(Preferences.groqApiKey)
+        } else if (Preferences.llmMode == "local") {
             loadFirstAvailableModel()
         } else {
             _currentModelName.value = "Cloud (Qwen)"
@@ -184,7 +194,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     currentModel = model
                     _currentModelName.value = model.name
                     _isModelLoaded.value = true
-                    _llmMode.value = if (model.modelFormat == "groq") "api" else "local"
+                    _llmMode.value = if (model.modelFormat == "groq") "groq" else "local"
                     Preferences.llmMode = _llmMode.value
                     Log.d(TAG, "Switched to model: ${model.name}")
                 } else {
@@ -301,8 +311,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun switchToGroq() {
-        _llmMode.value = "api"
-        Preferences.llmMode = "api"
+        _llmMode.value = "groq"
+        Preferences.llmMode = "groq"
         val unified = inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
         unified?.groqService?.setApiKey(Preferences.groqApiKey)
     }
@@ -387,7 +397,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val sb = StringBuilder()
 
-                if (mode == "api") {
+                if (mode == "groq") {
+                    generateViaGroq(assembled, sb, placeholderId)
+                } else if (mode == "api") {
                     generateViaApi(assembled, sb, placeholderId)
                 } else {
                     generateViaLocal(assembled, userText, sb, placeholderId)
@@ -450,7 +462,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val sb2 = StringBuilder()
             val assembled2 = buildAssembledPrompt(userText, recentToolResults.toList())
 
-            if (_llmMode.value == "api") {
+            if (_llmMode.value == "groq") {
+                generateViaGroq(assembled2, sb2, secondPassId)
+            } else if (_llmMode.value == "api") {
                 generateViaApi(assembled2, sb2, secondPassId)
             } else {
                 generateViaLocal(assembled2, userText, sb2, secondPassId)
@@ -463,6 +477,43 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         } else {
             _messages.update { it + ChatMessage(text = "Tool error: ${result.output}", isUser = false) }
+        }
+    }
+
+    private suspend fun generateViaGroq(
+        assembled: PromptAssembler.AssembledPrompt,
+        sb: StringBuilder,
+        placeholderId: String,
+    ) {
+        val prompt = PromptAssembler.toGenericFormat(assembled)
+        Log.d(TAG, "Groq prompt: ${prompt.length} chars")
+        val unified = inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
+        if (unified == null || Preferences.groqApiKey.isBlank()) {
+            sb.append("Kein Groq API Key. Bitte in Einstellungen eintragen.")
+            _messages.update { list -> list.map { if (it.id == placeholderId) it.copy(text = sb.toString()) else it } }
+            return
+        }
+        try {
+            val groqModel = LLMModel(
+                name = "Groq", description = "", url = "",
+                category = "text", sizeBytes = 0L, source = "Groq Cloud",
+                supportsVision = false,
+                requirements = com.llmhub.llmhub.data.ModelRequirements(1, 2),
+                contextWindowSize = 32768, modelFormat = "groq",
+                groqModelId = Preferences.groqSelectedModel
+            )
+            unified.groqService.loadModel(groqModel)
+            val chatId = currentChatId ?: return
+            val responseFlow = unified.groqService.generateResponseStreamWithSession(prompt, groqModel, chatId)
+            responseFlow.collect { chunk ->
+                sb.append(chunk)
+                val currentText = sb.toString()
+                _messages.update { list -> list.map { if (it.id == placeholderId) it.copy(text = currentText) else it } }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Groq failed: ${e.message}", e)
+            sb.append("Fehler: ${e.message}")
+            _messages.update { list -> list.map { if (it.id == placeholderId) it.copy(text = sb.toString()) else it } }
         }
     }
 

@@ -127,6 +127,8 @@ class MainActivity : ComponentActivity() {
                         onDownloadQwen = viewModel::downloadQwenModel,
                         onSwitchToGroq = viewModel::switchToGroq,
                         onSetGroqApiKey = viewModel::setGroqApiKey,
+                        onSetGroqModel = viewModel::setGroqModel,
+                        selectedGroqModel = viewModel.selectedGroqModel.collectAsState().value,
                     )
                 }
             }

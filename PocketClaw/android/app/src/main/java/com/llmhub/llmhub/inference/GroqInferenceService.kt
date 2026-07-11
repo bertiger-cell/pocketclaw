@@ -185,7 +185,7 @@ class GroqInferenceService(private val context: Context) : InferenceService {
         }
 
         return JSONObject().apply {
-            put("model", currentModel?.groqModelId ?: "qwen/qwen3-1.7b")
+            put("model", Preferences.groqSelectedModel)
             put("messages", messages)
             put("max_tokens", getEffectiveMaxTokens(currentModel ?: return@apply))
             put("temperature", (overrideTemperature ?: 0.7).toDouble())

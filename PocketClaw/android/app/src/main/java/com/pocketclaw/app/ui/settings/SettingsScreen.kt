@@ -43,6 +43,8 @@ fun SettingsScreen(
     onOpenAccessibilitySettings: () -> Unit,
     onRequestStoragePermission: () -> Unit,
     onSetGroqApiKey: (String) -> Unit = {},
+    onSetGroqModel: (String) -> Unit = {},
+    selectedGroqModel: String = "llama-3.3-70b-versatile",
     qwenDownloaded: Boolean = false,
     qwenDownloading: Boolean = false,
     qwenProgress: Float = 0f,
@@ -53,6 +55,7 @@ fun SettingsScreen(
     var ttsEnabled by remember { mutableStateOf(Preferences.ttsEnabled) }
     var showApiKeyDialog by remember { mutableStateOf(false) }
     var showGroqApiKeyDialog by remember { mutableStateOf(false) }
+    var showGroqModelDialog by remember { mutableStateOf(false) }
     var showMessagingDialog by remember { mutableStateOf(false) }
     var showCreateTaskDialog by remember { mutableStateOf(false) }
     var showAuditLog by remember { mutableStateOf(false) }
@@ -350,6 +353,17 @@ fun SettingsScreen(
         )
     }
 
+    if (showGroqModelDialog) {
+        GroqModelDialog(
+            onDismiss = { showGroqModelDialog = false },
+            onSelect = { modelId ->
+                onSetGroqModel(modelId)
+                showGroqModelDialog = false
+            },
+            currentModel = selectedGroqModel,
+        )
+    }
+
     if (showGroqApiKeyDialog) {
         GroqApiKeyDialog(
             onDismiss = { showGroqApiKeyDialog = false },
@@ -460,6 +474,51 @@ private fun ApiKeyDialog(
 }
 
 @Composable
+// Groq Free Tier models
+private val GROQ_FREE_MODELS = listOf(
+    "llama-3.3-70b-versatile" to "Llama 3.3 70B (Stark, 128k)",
+    "llama-3.1-8b-instant" to "Llama 3.1 8B (Schnell, 128k)",
+    "meta-llama/llama-4-scout-17b-16e-instruct" to "Llama 4 Scout 17B (MoE, neu)",
+    "qwen/qwen3-32b" to "Qwen 3 32B (Stark)",
+    "qwen/qwen3.6-27b" to "Qwen 3.6 27B (Neu)",
+    "openai/gpt-oss-20b" to "GPT-OSS 20B (OpenAI, billig)",
+    "openai/gpt-oss-120b" to "GPT-OSS 120B (OpenAI, Stark)",
+)
+
+@Composable
+private fun GroqModelDialog(
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit,
+    currentModel: String,
+) {
+    val colors = AppColors
+    AlertDialog(
+        onDismissRequest = onDismiss, containerColor = colors.card,
+        title = { Text("Groq Modell", color = colors.textPrimary) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text("Alle kostenlos nutzbar.", style = MaterialTheme.typography.bodySmall, color = colors.textSecondary)
+                Spacer(modifier = Modifier.height(8.dp))
+                GROQ_FREE_MODELS.forEach { (id, label) ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { onSelect(id) }.padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = id == currentModel, onClick = { onSelect(id) }, colors = RadioButtonDefaults.colors(selectedColor = CrabOrange))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(label, style = MaterialTheme.typography.bodyMedium, color = colors.textPrimary, fontWeight = if (id == currentModel) FontWeight.Bold else FontWeight.Normal)
+                            Text(id, style = MaterialTheme.typography.bodySmall, color = colors.textMuted)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Fertig", color = CrabOrange) } },
+        dismissButton = null,
+    )
+}
+
 private fun GroqApiKeyDialog(
     onDismiss: () -> Unit,
     onSave: (String) -> Unit,

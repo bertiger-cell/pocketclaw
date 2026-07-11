@@ -68,4 +68,8 @@ object Preferences {
     var groqApiKey: String
         get() = if (::prefs.isInitialized) prefs.getString("groq_api_key", "") ?: "" else ""
         set(value) { if (::prefs.isInitialized) prefs.edit().putString("groq_api_key", value).apply() }
+
+    var groqSelectedModel: String
+        get() = if (::prefs.isInitialized) prefs.getString("groq_selected_model", "llama-3.3-70b-versatile") ?: "llama-3.3-70b-versatile" else "llama-3.3-70b-versatile"
+        set(value) { if (::prefs.isInitialized) prefs.edit().putString("groq_selected_model", value).apply() }
 }

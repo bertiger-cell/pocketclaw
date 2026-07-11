@@ -115,6 +115,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _qwenProgress = MutableStateFlow(0f)
     val qwenProgress: StateFlow<Float> = _qwenProgress.asStateFlow()
 
+    private val _selectedGroqModel = MutableStateFlow("llama-3.3-70b-versatile")
+    val selectedGroqModel: StateFlow<String> = _selectedGroqModel.asStateFlow()
+
     val auditEntries: List<AuditLog.Entry> get() = app.auditLog.recent()
 
     init {
@@ -130,11 +133,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun loadFirstAvailableModel() {
         viewModelScope.launch {
             try {
-                // Initialize Groq API key
+                // Initialize Groq API key + model selection
                 val unified = inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
                 if (Preferences.groqApiKey.isNotBlank()) {
                     unified?.groqService?.setApiKey(Preferences.groqApiKey)
                 }
+                _selectedGroqModel.value = Preferences.groqSelectedModel
 
                 val models = withContext(Dispatchers.IO) {
                     ModelRepository.getAvailableModels(app)
@@ -201,6 +205,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val unified = app.inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
         unified?.groqService?.setApiKey(key)
         Log.d(TAG, "Groq API key saved and set")
+    }
+
+    fun setGroqModel(modelId: String) {
+        _selectedGroqModel.value = modelId
+        Preferences.groqSelectedModel = modelId
+        Log.d(TAG, "Groq model set to: $modelId")
     }
 
     fun downloadQwenModel() {

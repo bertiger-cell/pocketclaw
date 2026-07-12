@@ -136,6 +136,99 @@ object ModelData {
             contextWindowSize = 4096,
             modelFormat = "task"
         ),
+        // ── Gemma 4 (Google, 2025) ──────────────────────────────────────
+        LLMModel(
+            name = "Gemma-4 E2B IT (Web, LiteRT-LM)",
+            description = "Google Gemma 4 E2B (2B effective) optimized for web/mobile. LiteRT-LM format, works on ALL Android devices including Exynos. ~1.9GB",
+            url = "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-web.litertlm?download=true",
+            category = "text",
+            sizeBytes = 2008023040L, // 1915MB
+            source = "Google via LiteRT Community",
+            supportsVision = false,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 3, recommendedRamGB = 5),
+            contextWindowSize = 8192,
+            modelFormat = "litertlm"
+        ),
+        LLMModel(
+            name = "Gemma-4 E2B IT (LiteRT-LM)",
+            description = "Google Gemma 4 E2B (2B effective) full quality. LiteRT-LM format, works on ALL Android devices. ~2.4GB",
+            url = "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm?download=true",
+            category = "text",
+            sizeBytes = 2588092416L, // 2468MB
+            source = "Google via LiteRT Community",
+            supportsVision = false,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 6),
+            contextWindowSize = 8192,
+            modelFormat = "litertlm"
+        ),
+        LLMModel(
+            name = "Gemma-4 E2B IT (Q3_K_S, GGUF)",
+            description = "Google Gemma 4 E2B with Q3_K_S quantization. GGUF format for Nexa SDK (Snapdragon). ~2.3GB",
+            url = "https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-Q3_K_S.gguf?download=true",
+            category = "text",
+            sizeBytes = 2445082624L, // 2332MB
+            source = "Google via unsloth",
+            supportsVision = false,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 6),
+            contextWindowSize = 8192,
+            modelFormat = "gguf"
+        ),
+        LLMModel(
+            name = "Gemma-4 E2B IT (Q3_K_M, GGUF)",
+            description = "Google Gemma 4 E2B with Q3_K_M quantization. GGUF format for Nexa SDK (Snapdragon). ~2.4GB",
+            url = "https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-Q3_K_M.gguf?download=true",
+            category = "text",
+            sizeBytes = 2536364032L, // 2419MB
+            source = "Google via unsloth",
+            supportsVision = false,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 6),
+            contextWindowSize = 8192,
+            modelFormat = "gguf"
+        ),
+        LLMModel(
+            name = "Gemma-4 E2B Vision Projector (BF16, GGUF)",
+            description = "Vision projector (mmproj) for Gemma-4 E2B. Required to enable image input on GGUF models. BF16 format. ~941MB",
+            url = "https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/mmproj-BF16.gguf?download=true",
+            category = "multimodal",
+            sizeBytes = 986683392L, // 941MB
+            source = "Google via unsloth",
+            supportsVision = true,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 1, recommendedRamGB = 2),
+            contextWindowSize = 0,
+            modelFormat = "gguf"
+        ),
+        LLMModel(
+            name = "Gemma-4 E2B IT (Web, Task)",
+            description = "Google Gemma 4 E2B (2B effective) web-optimized. MediaPipe .task format, works on ALL Android devices. ~1.9GB",
+            url = "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-web.task?download=true",
+            category = "text",
+            sizeBytes = 2003714048L, // 1911MB
+            source = "Google via LiteRT Community",
+            supportsVision = false,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 3, recommendedRamGB = 5),
+            contextWindowSize = 8192,
+            modelFormat = "task"
+        ),
+        LLMModel(
+            name = "Gemma-4 E2B IT (IQ2_M, GGUF)",
+            description = "Google Gemma 4 E2B with IQ2_M quantization — smallest GGUF variant. GGUF for Nexa SDK (Snapdragon). ~2.1GB",
+            url = "https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-IQ2_M.gguf?download=true",
+            category = "text",
+            sizeBytes = 2290489344L, // 2185MB
+            source = "Google via unsloth",
+            supportsVision = false,
+            supportsGpu = true,
+            requirements = ModelRequirements(minRamGB = 3, recommendedRamGB = 5),
+            contextWindowSize = 8192,
+            modelFormat = "gguf"
+        ),
+        // ── End Gemma 4 ──────────────────────────────────────────────────
         LLMModel(
             name = "Llama-3.2 1B (INT8)",
             description = "Meta's Llama 3.2 1B model with INT8 quantization. Optimized for on-device inference. Ready to download from HuggingFace (2.01GB)",
@@ -1070,6 +1163,36 @@ object ModelData {
             modelFormat = "mnn_cpu" // MNN framework for CPU inference
         ),
     )
+
+    // --- Device-specific model recommendations ---
+
+    /**
+     * Returns models optimized for Samsung Galaxy Note 20 (Exynos 990, 8GB RAM).
+     * Exynos does NOT support Nexa/GGUF inference — only litertlm, task, onnx, tflite.
+     */
+    fun modelsForExynos(): List<LLMModel> {
+        val exynosFormats = setOf("litertlm", "task", "onnx", "tflite")
+        return models.filter { model ->
+            model.modelFormat.lowercase() in exynosFormats &&
+                model.category in setOf("text", "embedding") &&
+                model.sizeBytes <= 2_500_000_000L && // ≤ 2.5 GB
+                !model.name.contains("Groq", ignoreCase = true)
+        }.distinctBy { it.name.substringBefore(" (") }
+    }
+
+    /**
+     * Returns models optimized for Xiaomi 13 (Snapdragon 8 Gen 2, 8-12GB RAM).
+     * Snapdragon supports ALL formats including GGUF/Nexa and QNN NPU.
+     */
+    fun modelsForSnapdragon(): List<LLMModel> {
+        val sdFormats = setOf("litertlm", "task", "onnx", "tflite", "gguf", "qnn_npu", "mnn_cpu")
+        return models.filter { model ->
+            model.modelFormat.lowercase() in sdFormats &&
+                model.category in setOf("text", "embedding", "image_generation") &&
+                model.sizeBytes <= 2_500_000_000L && // ≤ 2.5 GB
+                !model.name.contains("Groq", ignoreCase = true)
+        }.distinctBy { it.name.substringBefore(" (") }
+    }
 
     /**
      * Current Status and Next Steps

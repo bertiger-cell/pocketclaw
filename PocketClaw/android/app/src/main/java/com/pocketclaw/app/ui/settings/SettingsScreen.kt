@@ -61,6 +61,7 @@ fun SettingsScreen(
     onDownloadModel: (com.llmhub.llmhub.data.LLMModel) -> Unit = {},
     onLoadLocalModel: (com.llmhub.llmhub.data.LLMModel) -> Unit = {},
     onDeleteModel: (com.llmhub.llmhub.data.LLMModel) -> Unit = {},
+    onDownloadDeviceModels: (List<com.llmhub.llmhub.data.LLMModel>) -> Unit = {},
 ) {
     var sttEnabled by remember { mutableStateOf(Preferences.sttEnabled) }
     var ttsEnabled by remember { mutableStateOf(Preferences.ttsEnabled) }
@@ -216,6 +217,41 @@ fun SettingsScreen(
                                 Text(lastError!!, style = MaterialTheme.typography.bodySmall, color = AccentRed, maxLines = 2)
                             }
                         }
+                    }
+                }
+
+                // Device-specific quick-download buttons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Button(
+                        onClick = {
+                            val exynosModels = com.llmhub.llmhub.data.ModelData.modelsForExynos()
+                            onDownloadDeviceModels(exynosModels)
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = CrabOrange),
+                        shape = RoundedCornerShape(12.dp),
+                    ) {
+                        Icon(Icons.Default.PhoneAndroid, null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Galaxy Note 20", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                    }
+                    Button(
+                        onClick = {
+                            val sdModels = com.llmhub.llmhub.data.ModelData.modelsForSnapdragon()
+                            onDownloadDeviceModels(sdModels)
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = CrabOrangeDark),
+                        shape = RoundedCornerShape(12.dp),
+                    ) {
+                        Icon(Icons.Default.PhoneAndroid, null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Xiaomi 13", style = MaterialTheme.typography.labelSmall, maxLines = 1)
                     }
                 }
 

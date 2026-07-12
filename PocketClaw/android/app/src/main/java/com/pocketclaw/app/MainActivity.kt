@@ -137,6 +137,7 @@ class MainActivity : ComponentActivity() {
                         onDownloadModel = viewModel::downloadModel,
                         onLoadLocalModel = viewModel::loadLocalModel,
                         onDeleteModel = viewModel::deleteLocalModel,
+                        onDownloadDeviceModels = viewModel::downloadDeviceModels,
                     )
                 }
             }

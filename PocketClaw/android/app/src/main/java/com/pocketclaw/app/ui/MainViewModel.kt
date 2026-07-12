@@ -321,15 +321,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val modelsDir = java.io.File(app.filesDir, "models")
                 val targetFile = java.io.File(modelsDir, model.localFileName())
                 if (targetFile.exists() && targetFile.length() > 1_000_000) {
-                    _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
-                        downloaded = true, modelId = modelId
-                    ))
-                    _messages.update { it + ChatMessage(text = "${model.name} heruntergeladen! (${targetFile.length() / 1_000_000} MB) ✓", isUser = false) }
-                    loadFirstAvailableModel()
+                    // Validate downloaded file is not an HTML error page
+                    val validationError = validateDownloadedFile(targetFile, model.modelFormat)
+                    if (validationError != null) {
+                        Log.w(TAG, "Download validation failed for ${model.name}: $validationError")
+                        targetFile.delete()
+                        _lastError.value = validationError
+                        _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
+                            isDownloading = false, modelId = modelId
+                        ))
+                        _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - $validationError", isUser = false) }
+                    } else {
+                        _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
+                            downloaded = true, modelId = modelId
+                        ))
+                        _messages.update { it + ChatMessage(text = "${model.name} heruntergeladen! (${targetFile.length() / 1_000_000} MB) ✓", isUser = false) }
+                        loadFirstAvailableModel()
+                    }
                 } else {
+                    val reason = if (targetFile.exists()) "Datei zu klein (${targetFile.length()} bytes)" else "Datei nicht gefunden"
                     targetFile.delete()
-                    _lastError.value = "Download fehlgeschlagen: Datei zu klein"
-                    _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name}", isUser = false) }
+                    _lastError.value = "Download fehlgeschlagen: $reason"
+                    _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - $reason", isUser = false) }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Download failed for ${model.name}: ${e.message}", e)
@@ -424,6 +437,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to delete model ${model.name}: ${e.message}", e)
                 _messages.update { it + ChatMessage(text = "❌ Fehler beim Löschen: ${e.message}", isUser = false) }
+            }
+        }
+    }
+
+    fun downloadDeviceModels(models: List<LLMModel>) {
+        viewModelScope.launch {
+            val toDownload = models.filter { model ->
+                val dlState = _modelDownloads.value[model.name]
+                dlState?.downloaded != true
+            }
+            if (toDownload.isEmpty()) {
+                _messages.update { it + ChatMessage(text = "✅ Alle passenden Modelle bereits heruntergeladen.", isUser = false) }
+                return@launch
+            }
+            _messages.update { it + ChatMessage(text = "📥 Starte Download für ${toDownload.size} Modell(e)...", isUser = false) }
+            for (model in toDownload) {
+                downloadModel(model)
             }
         }
     }
@@ -917,6 +947,66 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         Log.d(TAG, "Switched LLM mode to: $mode")
+    }
+
+    /**
+     * Validates a downloaded model file is a real binary, not an HTML error page.
+     * Returns null if valid, or a human-readable error message.
+     */
+    private fun validateDownloadedFile(file: java.io.File, modelFormat: String): String? {
+        try {
+            val header = ByteArray(512)
+            java.io.FileInputStream(file).use { fis ->
+                val read = fis.read(header)
+                if (read < 4) return "Datei ist leer oder zu klein"
+            }
+            val headerStr = String(header, charset("ISO-8859-1")).trimStart(' ')
+
+            // Check if file is actually an HTML page (HuggingFace error)
+            val lowerHeader = headerStr.lowercase()
+            if (lowerHeader.startsWith("<!doctype html") || lowerHeader.startsWith("<html") ||
+                lowerHeader.contains("<title>403") || lowerHeader.contains("<title>404") ||
+                lowerHeader.contains("access denied") || lowerHeader.contains("forbidden")) {
+                return when {
+                    lowerHeader.contains("403") || lowerHeader.contains("forbidden") || lowerHeader.contains("access denied") ->
+                        "Token ungültig oder Modell erfordert HuggingFace-Lizenz. Prüfe HF_TOKEN."
+                    lowerHeader.contains("404") || lowerHeader.contains("not found") ->
+                        "Modell nicht gefunden (HTTP 404). URL könnte veraltet sein."
+                    else ->
+                        "Server liefert HTML statt Modell-Datei. Möglicherweise Token erforderlich."
+                }
+            }
+
+            // Format-specific validation
+            when (modelFormat.lowercase()) {
+                "gguf" -> {
+                    if (read >= 4) {
+                        val magic = String(header.sliceArray(0, 4))
+                        if (magic != "GGUF") {
+                            return "Datei ist kein gültiges GGUF-Format (Magic: $magic)"
+                        }
+                    }
+                }
+                "task" -> {
+                    // .task files are ZIP archives
+                    if (read >= 2 && header[0] == 'P'.code.toByte() && header[1] == 'K'.code.toByte()) {
+                        // Valid ZIP header
+                    } else if (file.length() < 10_000_000) {
+                        return "MediaPipe .task Datei ist zu klein (${file.length() / 1_000_000} MB)"
+                    }
+                }
+                "litertlm" -> {
+                    if (file.length() < 10_000_000) {
+                        return "LiteRT-LM Datei ist zu klein (${file.length() / 1_000_000} MB)"
+                    }
+                }
+            }
+
+            return null // Valid
+        } catch (e: Exception) {
+            Log.w(TAG, "File validation error: ${e.message}")
+            return "Validierungsfehler: ${e.message}"
+        }
     }
 
     private fun showToast(msg: String) {

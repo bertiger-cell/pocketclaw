@@ -81,6 +81,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _availableModels = MutableStateFlow<List<LLMModel>>(emptyList())
     val availableModels: StateFlow<List<LLMModel>> = _availableModels.asStateFlow()
 
+    private val _allLocalModels = MutableStateFlow<List<LLMModel>>(emptyList())
+    val allLocalModels: StateFlow<List<LLMModel>> = _allLocalModels.asStateFlow()
+
     private val _llmMode = MutableStateFlow(Preferences.llmMode)
     val llmMode: StateFlow<String> = _llmMode.asStateFlow()
 
@@ -199,6 +202,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     ModelRepository.getAvailableModels(app)
                 }
                 _availableModels.value = models
+                // Also load ALL local models (downloaded + available)
+                // Show ALL text-capable models for download (exclude embedding, image gen, groq-only, tflite)
+                val excludedFormats = setOf("embedding", "groq", "tflite", "qnn_npu", "mnn_cpu")
+                val allLocal = com.llmhub.llmhub.data.ModelData.models.filter {
+                    it.category != "embedding" && it.category != "image_generation" && it.modelFormat !in excludedFormats
+                }
+                // Merge download status
+                val enriched = allLocal.map { model ->
+                    val downloaded = models.find { it.name == model.name }?.isDownloaded ?: false
+                    model.copy(isDownloaded = downloaded)
+                }
+                _allLocalModels.value = enriched
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load available models: ${e.message}", e)
             }
@@ -214,8 +229,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     currentModel = model
                     _currentModelName.value = model.name
                     _isModelLoaded.value = true
-                    _llmMode.value = if (model.modelFormat == "groq") "groq" else "local"
-                    Preferences.llmMode = _llmMode.value
+                    if (model.modelFormat == "groq") {
+                        _llmMode.value = "groq"
+                        Preferences.llmMode = "groq"
+                        // Update Groq selected model if model has groqModelId
+                        model.groqModelId?.let {
+                            _selectedGroqModel.value = it
+                            Preferences.groqSelectedModel = it
+                        }
+                    } else {
+                        _llmMode.value = "local"
+                        Preferences.llmMode = "local"
+                    }
                     Log.d(TAG, "Switched to model: ${model.name}")
                 } else {
                     Log.w(TAG, "Failed to load model: ${model.name}")
@@ -307,7 +332,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _isModelLoaded.value = true
                     _llmMode.value = "local"
                     Preferences.llmMode = "local"
-                    _messages.update { it + ChatMessage(text = "✅ ${model.name} geladen!", isUser = false) }
+                    loadAvailableModels() // refresh download status
+                    _messages.update { it + ChatMessage(text = "✅ ${model.name} geladen! Modell ist bereit.", isUser = false) }
                 } else {
                     // Fallback to CPU
                     val cpuSuccess = inferenceService.loadModel(model, com.google.mediapipe.tasks.genai.llminference.LlmInference.Backend.CPU)
@@ -317,15 +343,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         _isModelLoaded.value = true
                         _llmMode.value = "local"
                         Preferences.llmMode = "local"
+                        loadAvailableModels()
                         _messages.update { it + ChatMessage(text = "✅ ${model.name} geladen (CPU-Modus)!", isUser = false) }
                     } else {
-                        _lastError.value = "Modell konnte nicht geladen werden"
-                        _messages.update { it + ChatMessage(text = "❌ ${model.name} konnte nicht geladen werden", isUser = false) }
+                        val errorMsg = "❌ ${model.name} konnte nicht geladen werden. " +
+                            "Das Modell (${model.sizeBytes / 1_000_000} MB, ${model.modelFormat.uppercase()}) ist möglicherweise nicht kompatibel mit deinem Gerät."
+                        _lastError.value = errorMsg
+                        _messages.update { it + ChatMessage(text = errorMsg, isUser = false) }
                     }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load model ${model.name}: ${e.message}", e)
-                _lastError.value = e.message
+                val errorMsg = "❌ Fehler beim Laden von ${model.name}: ${e.message ?: "Unbekannter Fehler"}"
+                _lastError.value = errorMsg
+                _messages.update { it + ChatMessage(text = errorMsg, isUser = false) }
             } finally {
                 _modelLoading.value = false
             }
@@ -559,8 +590,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         sb: StringBuilder,
         placeholderId: String,
     ) {
-        val prompt = PromptAssembler.toGenericFormat(assembled)
-        Log.d(TAG, "Groq prompt: ${prompt.length} chars, model: ${Preferences.groqSelectedModel}")
+        Log.d(TAG, "Groq prompt: ${assembled.userMessage.length} chars, model: ${Preferences.groqSelectedModel}")
         val unified = inferenceService as? com.llmhub.llmhub.inference.UnifiedInferenceService
         if (unified == null || Preferences.groqApiKey.isBlank()) {
             sb.append("Kein Groq API Key. Bitte in Einstellungen unter Groq Cloud eintragen.")
@@ -570,13 +600,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         try {
             unified.groqService.setApiKey(Preferences.groqApiKey)
             val chatId = currentChatId ?: return
-            val responseFlow = unified.groqService.generateResponseStream(prompt, com.llmhub.llmhub.data.LLMModel(
-                name = "Groq", description = "", url = "",
-                category = "text", sizeBytes = 0L, source = "Groq",
-                supportsVision = false,
-                requirements = com.llmhub.llmhub.data.ModelRequirements(1, 2),
-                contextWindowSize = 32768, modelFormat = "groq"
-            ))
+            val responseFlow = unified.groqService.generateResponseStreamWithAssembledPrompt(assembled)
             responseFlow.collect { chunk ->
                 sb.append(chunk)
                 val currentText = sb.toString()
@@ -602,18 +626,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (unified != null && Preferences.groqApiKey.isNotBlank()) {
             Log.d(TAG, "Using Groq Cloud API with model: ${Preferences.groqSelectedModel}")
             try {
-                unified.groqService.loadModel(
-                    LLMModel(
-                        name = "Groq", description = "", url = "",
-                        category = "text", sizeBytes = 0L, source = "",
-                        supportsVision = false,
-                        requirements = com.llmhub.llmhub.data.ModelRequirements(1, 2),
-                        contextWindowSize = 32768, modelFormat = "groq",
-                        groqModelId = Preferences.groqSelectedModel
-                    )
-                )
+                unified.groqService.setApiKey(Preferences.groqApiKey)
                 val chatId = currentChatId ?: return
-                val responseFlow = unified.groqService.generateResponseStreamWithSession(prompt, com.llmhub.llmhub.data.ModelData.models.find { it.modelFormat == "groq" } ?: return, chatId)
+                val responseFlow = unified.groqService.generateResponseStreamWithAssembledPrompt(assembled)
                 responseFlow.collect { chunk ->
                     sb.append(chunk)
                     val currentText = sb.toString()

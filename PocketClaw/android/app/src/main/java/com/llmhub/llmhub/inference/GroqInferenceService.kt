@@ -6,6 +6,7 @@ import android.util.Log
 import com.pocketclaw.app.data.Preferences
 import com.llmhub.llmhub.data.LLMModel
 import com.pocketclaw.claw.tools.ToolRegistry
+import com.pocketclaw.claw.prompt.PromptAssembler
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -151,6 +152,68 @@ class GroqInferenceService(private val context: Context) : InferenceService {
         }
     }
 
+    /**
+     * Generate response using an assembled prompt (with proper history and skills).
+     */
+    suspend fun generateResponseStreamWithAssembledPrompt(
+        assembled: PromptAssembler.AssembledPrompt,
+    ): Flow<String> {
+        return flow {
+            val requestBody = buildRequestBodyFromAssembled(assembled)
+            val request = Request.Builder()
+                .url("https://api.groq.com/openai/v1/chat/completions")
+                .addHeader("Authorization", "Bearer $apiKey")
+                .addHeader("Content-Type", "application/json")
+                .post(requestBody.toString().toRequestBody("application/json".toMediaType()))
+                .build()
+
+            val response = withContext(Dispatchers.IO) {
+                client.newCall(request).execute()
+            }
+
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string() ?: "Unknown error"
+                Log.e(TAG, "Groq API error ${response.code}: $errorBody")
+                emit("Fehler: Groq API ${response.code} - $errorBody")
+                return@flow
+            }
+
+            val body = response.body?.string() ?: ""
+            try {
+                val json = JSONObject(body)
+                val choices = json.getJSONArray("choices")
+                if (choices.length() > 0) {
+                    val message = choices.getJSONObject(0).getJSONObject("message")
+
+                    val content = message.optString("content", "")
+                    if (content.isNotBlank()) {
+                        emit(content)
+                    }
+
+                    if (message.has("tool_calls")) {
+                        val toolCalls = message.getJSONArray("tool_calls")
+                        for (i in 0 until toolCalls.length()) {
+                            val tc = toolCalls.getJSONObject(i)
+                            val fn = tc.getJSONObject("function")
+                            val name = fn.getString("name")
+                            val argsRaw = fn.optString("arguments", "")
+                            // Parse OpenAI args JSON and convert to text marker
+                            val argsStr = try {
+                                val argsJson = JSONObject(argsRaw)
+                                if (argsJson.has("query")) argsJson.getString("query")
+                                else argsRaw
+                            } catch (_: Exception) { argsRaw }
+                            emit("\n[T:${name}:${argsStr}]\n")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error parsing Groq response: ${e.message}", e)
+                emit("Fehler beim Parsen der Antwort")
+            }
+        }
+    }
+
     override suspend fun generateResponseStreamWithSession(
         prompt: String,
         model: LLMModel,
@@ -194,13 +257,74 @@ class GroqInferenceService(private val context: Context) : InferenceService {
 
     override fun getMemoryWarningForImages(images: List<Bitmap>): String? = null
 
+    private fun buildRequestBodyFromAssembled(assembled: PromptAssembler.AssembledPrompt): JSONObject {
+        val messages = JSONArray()
+
+        // System prompt
+        messages.put(JSONObject().apply {
+            put("role", "system")
+            put("content", assembled.systemPrompt)
+        })
+
+        // Chat history
+        for (turn in assembled.chatHistory) {
+            messages.put(JSONObject().apply {
+                put("role", turn.role)
+                put("content", turn.content)
+            })
+        }
+
+        // User message
+        messages.put(JSONObject().apply {
+            put("role", "user")
+            put("content", assembled.userMessage)
+        })
+
+        val body = JSONObject().apply {
+            put("model", Preferences.groqSelectedModel)
+            put("messages", messages)
+            put("max_tokens", (currentModel?.let { getEffectiveMaxTokens(it) } ?: 4096))
+            put("temperature", (overrideTemperature ?: 0.7).toDouble())
+            if (overrideTopP != null) put("top_p", overrideTopP!!.toDouble())
+        }
+
+        // Add OpenAI-compatible tools
+        val tools = ToolRegistry.all()
+        if (tools.isNotEmpty()) {
+            val toolsArray = JSONArray()
+            for (tool in tools) {
+                val toolObj = JSONObject().apply {
+                    put("type", "function")
+                    put("function", JSONObject().apply {
+                        put("name", tool.id)
+                        put("description", "${tool.name}: ${tool.description}")
+                        put("parameters", JSONObject().apply {
+                            put("type", "object")
+                            put("properties", JSONObject().apply {
+                                put("query", JSONObject().apply {
+                                    put("type", "string")
+                                    put("description", "Der Parameter für ${tool.id}: ${tool.paramHint}")
+                                })
+                            })
+                            put("required", JSONArray())
+                        })
+                    })
+                }
+                toolsArray.put(toolObj)
+            }
+            body.put("tools", toolsArray)
+            body.put("tool_choice", "auto")
+        }
+
+        return body
+    }
+
     private fun buildRequestBody(prompt: String): JSONObject {
         val messages = JSONArray().apply {
             // System message with tool instructions
             put(JSONObject().apply {
                 put("role", "system")
-                val toolPrompt = ToolRegistry.buildToolListPrompt()
-                put("content", "Du bist PocketClaw, ein hilfreicher KI-Assistent.\nNutze Werkzeuge wenn nötig.\n\n$toolPrompt\n\nWichtig: Du KANNST Werkzeuge verwenden wenn sie helfen. Wenn kein Werkzeug benötigt wird, antworte einfach normal.\nAntworte auf Deutsch, kurz und präzise.")
+                put("content", "Du bist PocketClaw, ein hilfreicher KI-Assistent.\nAntworte auf Deutsch, kurz und präzise.\n\nDu hast Zugriff auf Werkzeuge. Verwende sie wenn sie helfen. Wenn kein Werkzeug benötigt wird, antworte einfach normal.")
             })
             put(JSONObject().apply {
                 put("role", "user")
@@ -229,9 +353,9 @@ class GroqInferenceService(private val context: Context) : InferenceService {
                         put("parameters", JSONObject().apply {
                             put("type", "object")
                             put("properties", JSONObject().apply {
-                                put("args", JSONObject().apply {
+                                put("query", JSONObject().apply {
                                     put("type", "string")
-                                    put("description", "Argument für ${tool.id}: ${tool.paramHint}")
+                                    put("description", "Der Parameter für ${tool.id}: ${tool.paramHint}")
                                 })
                             })
                             put("required", JSONArray())

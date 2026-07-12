@@ -41,12 +41,12 @@ object ToolRegistry {
     fun buildToolListPrompt(): String {
         if (tools.isEmpty()) return ""
         return buildString {
-            append("## 可用工具\n")
+            append("## Verfügbare Werkzeuge\n")
             for (tool in tools.values) {
                 append("- ${tool.id}(${tool.paramHint}): ${tool.description}\n")
             }
-            append("\n调用格式：[T:工具ID:参数]（独占一行，放在回复末尾）\n")
-            append("规则：每条回复最多1个工具；先文字再工具；不需要就不写。\n")
+            append("\nAufruf-Format: [T:tool_id:argument] (eigene Zeile, am Ende der Antwort)\n")
+            append("Regeln: Maximal 1 Werkzeug pro Antwort; Text zuerst, dann Werkzeug; wenn nicht nötig, weglassen.\n")
         }
     }
 }

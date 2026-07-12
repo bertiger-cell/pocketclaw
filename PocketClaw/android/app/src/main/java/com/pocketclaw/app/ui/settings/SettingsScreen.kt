@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -175,84 +176,165 @@ fun SettingsScreen(
                 }
             }
             if (llmMode == "local") {
-                HorizontalDivider(color = colors.surface, thickness = 1.dp)
-                val availableLocal = localModels.filter { it.modelFormat == "litertlm" || it.modelFormat == "gguf" }
+                val availableLocal = localModels
                 if (availableLocal.isEmpty()) {
-                    SettingsItem(
-                        icon = Icons.Default.Info, title = "Keine lokalen Modelle",
-                        subtitle = "Wähle Groq Cloud oder lade Modelle herunter",
-                        onClick = { }, colors = colors,
-                    )
+                    AnimatedVisibility(visible = true, enter = fadeIn() + slideInVertically()) {
+                        Surface(
+                            color = colors.card,
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Icon(Icons.Default.CloudDownload, null, tint = CrabOrange, modifier = Modifier.size(48.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text("Modelle zum Download bereit", style = MaterialTheme.typography.titleMedium, color = colors.textPrimary)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Lade ein Modell herunter um es lokal zu nutzen", style = MaterialTheme.typography.bodySmall, color = colors.textSecondary)
+                            }
+                        }
+                    }
                 }
-                availableLocal.forEach { model ->
-                    HorizontalDivider(color = colors.surface, thickness = 1.dp)
+
+                // Last error banner
+                if (lastError != null) {
+                    AnimatedVisibility(visible = true, enter = fadeIn() + expandVertically()) {
+                        Surface(
+                            color = AccentRed.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(Icons.Default.Error, null, tint = AccentRed, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(lastError!!, style = MaterialTheme.typography.bodySmall, color = AccentRed, maxLines = 2)
+                            }
+                        }
+                    }
+                }
+
+                availableLocal.forEachIndexed { index, model ->
                     val dlState = modelDownloads[model.name]
                     val isDownloading = dlState?.isDownloading == true
                     val isDownloaded = dlState?.downloaded == true || model.isDownloaded
                     val progress = dlState?.progress ?: 0f
 
-                    if (isDownloaded) {
-                        Surface(
-                            onClick = { onLoadLocalModel(model) },
-                            color = colors.card,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(Icons.Default.CheckCircle, null, tint = AccentGreen, modifier = Modifier.size(24.dp))
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(model.name, style = MaterialTheme.typography.titleSmall, color = colors.textPrimary)
-                                    Text("${model.sizeBytes / 1_000_000} MB • ${model.modelFormat}", style = MaterialTheme.typography.bodySmall, color = colors.textSecondary)
-                                }
-                                if (modelLoading) {
-                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = CrabOrange)
-                                } else {
-                                    TextButton(onClick = { onLoadLocalModel(model) }) {
-                                        Text("Laden", color = CrabOrange)
-                                    }
-                                }
-                            }
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300 + index * 100)) +
+                                slideInVertically(initialOffsetY = { it / 2 }),
+                    ) {
+                        val borderColor = when {
+                            isDownloading -> CrabOrange.copy(alpha = 0.5f)
+                            isDownloaded -> AccentGreen.copy(alpha = 0.5f)
+                            else -> colors.surface
                         }
-                    } else {
                         Surface(
-                            onClick = { if (!isDownloading) onDownloadModel(model) },
-                            color = colors.card,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    Icons.Default.Download, null,
-                                    tint = if (isDownloading) CrabOrange else colors.textMuted,
-                                    modifier = Modifier.size(24.dp),
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(model.name, style = MaterialTheme.typography.titleSmall, color = colors.textPrimary)
-                                    Text(
-                                        if (isDownloading) "Lädt... ${(progress * 100).toInt()}%"
-                                        else "${model.sizeBytes / 1_000_000} MB • ${model.modelFormat}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = if (isDownloading) CrabOrange else colors.textSecondary,
-                                    )
+                            onClick = {
+                                when {
+                                    isDownloading -> {}
+                                    isDownloaded -> onLoadLocalModel(model)
+                                    else -> onDownloadModel(model)
                                 }
-                                if (isDownloading) {
-                                    CircularProgressIndicator(
-                                        progress = { progress },
-                                        modifier = Modifier.size(28.dp), strokeWidth = 3.dp,
-                                        color = CrabOrange, trackColor = colors.surface,
-                                    )
-                                } else {
-                                    TextButton(onClick = { onDownloadModel(model) }) {
-                                        Text("Download", color = CrabOrange)
+                            },
+                            color = colors.card,
+                            shape = RoundedCornerShape(16.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // Animated icon
+                                    if (isDownloading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(32.dp),
+                                            strokeWidth = 3.dp,
+                                            color = CrabOrange,
+                                        )
+                                    } else if (isDownloaded) {
+                                        Icon(Icons.Default.CheckCircle, null, tint = AccentGreen, modifier = Modifier.size(32.dp))
+                                    } else {
+                                        Icon(Icons.Default.CloudDownload, null, tint = colors.textMuted, modifier = Modifier.size(32.dp))
                                     }
+                                    Spacer(modifier = Modifier.width(14.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            model.name,
+                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = colors.textPrimary,
+                                            maxLines = 1,
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            // Size badge
+                                            Surface(
+                                                color = if (isDownloading) CrabOrange.copy(alpha = 0.15f) else colors.surface,
+                                                shape = RoundedCornerShape(6.dp),
+                                            ) {
+                                                Text(
+                                                    if (isDownloading) "${(progress * 100).toInt()}%"
+                                                    else "${model.sizeBytes / 1_000_000} MB",
+                                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                                    color = if (isDownloading) CrabOrange else colors.textSecondary,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            // Format badge
+                                            Surface(
+                                                color = colors.surface,
+                                                shape = RoundedCornerShape(6.dp),
+                                            ) {
+                                                Text(
+                                                    model.modelFormat.uppercase(),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = colors.textMuted,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            // Description
+                                            Text(
+                                                model.description.take(40) + "...",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = colors.textMuted,
+                                                maxLines = 1,
+                                            )
+                                        }
+                                    }
+                                    // Action button
+                                    if (!isDownloading) {
+                                        TextButton(
+                                            onClick = {
+                                                if (isDownloaded) onLoadLocalModel(model)
+                                                else onDownloadModel(model)
+                                            }
+                                        ) {
+                                            Text(
+                                                if (isDownloaded) "Laden" else "Download",
+                                                color = if (isDownloaded) AccentGreen else CrabOrange,
+                                                fontWeight = FontWeight.Bold,
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // Animated progress bar for downloading
+                                if (isDownloading) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    LinearProgressIndicator(
+                                        progress = { progress },
+                                        modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
+                                        color = CrabOrange,
+                                        trackColor = colors.surface,
+                                    )
                                 }
                             }
                         }

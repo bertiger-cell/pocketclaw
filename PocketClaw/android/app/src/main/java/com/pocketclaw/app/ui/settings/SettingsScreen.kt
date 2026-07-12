@@ -178,7 +178,8 @@ fun SettingsScreen(
                 }
             }
             if (llmMode == "local") {
-                val availableLocal = localModels
+                // Gemma-4 models are accessible via device-specific buttons only
+                val availableLocal = localModels.filter { !it.name.contains("Gemma-4", ignoreCase = true) }
                 if (availableLocal.isEmpty()) {
                     AnimatedVisibility(visible = true, enter = fadeIn() + slideInVertically()) {
                         Surface(

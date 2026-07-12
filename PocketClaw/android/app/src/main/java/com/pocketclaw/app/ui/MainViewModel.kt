@@ -203,10 +203,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 _availableModels.value = models
                 // Also load ALL local models (downloaded + available)
-                // Show ALL text-capable models for download (exclude embedding, image gen, groq-only, tflite)
+                // Show ALL text-capable models for download
                 val excludedFormats = setOf("embedding", "groq", "tflite", "qnn_npu", "mnn_cpu")
+                val excludedCategories = setOf("embedding", "image_generation", "multimodal")
                 val allLocal = com.llmhub.llmhub.data.ModelData.models.filter {
-                    it.category != "embedding" && it.category != "image_generation" && it.modelFormat !in excludedFormats
+                    it.category !in excludedCategories && it.modelFormat !in excludedFormats
                 }
                 // Merge download status
                 val enriched = allLocal.map { model ->

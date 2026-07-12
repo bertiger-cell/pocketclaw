@@ -87,38 +87,11 @@ fun SettingsScreen(
             modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 20.dp),
         )
 
-        SettingsSection("Appearance", colors) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Default.Palette, null, tint = CrabOrange, modifier = Modifier.size(24.dp))
-                Spacer(modifier = Modifier.width(16.dp))
-                Text("Theme", style = MaterialTheme.typography.titleMedium, color = colors.textPrimary)
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                for ((mode, label) in listOf("dark" to "Dark", "light" to "Light", "system" to "Auto")) {
-                    FilterChip(
-                        selected = themeMode == mode,
-                        onClick = {
-                            themeMode = mode
-                            Preferences.themeMode = mode
-                        },
-                        label = { Text(label) },
-                        leadingIcon = {
-                            if (themeMode == mode) Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = CrabOrangeDark,
-                            selectedLabelColor = DarkTextPrimary,
-                        ),
-                    )
-                }
-            }
-        }
+        AppearanceSection(
+            themeMode = themeMode,
+            onThemeChange = { mode -> themeMode = mode; Preferences.themeMode = mode },
+            colors = colors,
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -425,164 +398,53 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SettingsSection("Voice", colors) {
-            SettingsToggle(
-                icon = Icons.Default.Mic, title = "Speech-to-Text",
-                subtitle = "Android Speech (on-device)", checked = sttEnabled,
-                onCheckedChange = { sttEnabled = it; Preferences.sttEnabled = it },
-                colors = colors,
-            )
-            HorizontalDivider(color = colors.surface, thickness = 1.dp)
-            SettingsToggle(
-                icon = Icons.AutoMirrored.Filled.VolumeUp, title = "Text-to-Speech",
-                subtitle = "Kokoro / System TTS", checked = ttsEnabled,
-                onCheckedChange = { ttsEnabled = it; Preferences.ttsEnabled = it },
-                colors = colors,
-            )
-        }
+        VoiceSection(
+            sttEnabled = sttEnabled, ttsEnabled = ttsEnabled,
+            onToggleStt = { sttEnabled = it; Preferences.sttEnabled = it },
+            onToggleTts = { ttsEnabled = it; Preferences.ttsEnabled = it },
+            colors = colors,
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SettingsSection("Permissions", colors) {
-            val accessibilityOn = ScreenControlService.isEnabled
-            SettingsItem(
-                icon = Icons.Default.Accessibility,
-                title = "Screen Control",
-                subtitle = if (accessibilityOn) "Enabled" else "Tap to enable in system settings",
-                onClick = onOpenAccessibilitySettings,
-                colors = colors,
-            )
-            HorizontalDivider(color = colors.surface, thickness = 1.dp)
-            val storageGranted = Environment.isExternalStorageManager()
-            SettingsItem(
-                icon = Icons.Default.Folder,
-                title = "File Access",
-                subtitle = if (storageGranted) "Full access granted" else "Tap to grant storage access",
-                onClick = onRequestStoragePermission,
-                colors = colors,
-            )
-            HorizontalDivider(color = colors.surface, thickness = 1.dp)
-            SettingsItem(
-                icon = Icons.Default.Notifications, title = "Notification Access",
-                subtitle = "Manage which apps to monitor",
-                onClick = onOpenNotificationSettings, colors = colors,
-            )
-        }
+        PermissionsSection(
+            onOpenNotificationSettings = onOpenNotificationSettings,
+            onOpenAccessibilitySettings = onOpenAccessibilitySettings,
+            onRequestStoragePermission = onRequestStoragePermission,
+            colors = colors,
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SettingsSection("Reminders (${scheduledTasks.size})", colors) {
-            if (scheduledTasks.isEmpty()) {
-                Text(
-                    "No reminders. Ask PocketClaw or create one below.",
-                    color = colors.textMuted,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(16.dp),
-                )
-            } else {
-                for (task in scheduledTasks.take(5)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            "%02d:%02d".format(task.hour, task.minute),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = if (task.enabled) CrabOrange else colors.textMuted,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(task.name, modifier = Modifier.weight(1f), color = colors.textPrimary, style = MaterialTheme.typography.bodyMedium)
-                        Switch(
-                            checked = task.enabled, onCheckedChange = { onToggleTask(task) },
-                            colors = SwitchDefaults.colors(checkedThumbColor = CrabOrange, checkedTrackColor = CrabOrangeDark),
-                            modifier = Modifier.height(24.dp),
-                        )
-                        IconButton(onClick = { onDeleteTask(task) }, modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Default.Delete, null, tint = colors.textMuted, modifier = Modifier.size(18.dp))
-                        }
-                    }
-                }
-            }
-            HorizontalDivider(color = colors.surface, thickness = 1.dp)
-            Surface(onClick = { showCreateTaskDialog = true }, color = colors.card) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Default.Add, null, tint = CrabOrange, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Create Reminder", color = CrabOrange, style = MaterialTheme.typography.labelLarge)
-                }
-            }
-        }
+        RemindersSection(
+            scheduledTasks = scheduledTasks,
+            onDeleteTask = onDeleteTask,
+            onToggleTask = onToggleTask,
+            onCreateTask = onCreateTask,
+            showCreateTaskDialog = showCreateTaskDialog,
+            onShowCreateTaskDialog = { showCreateTaskDialog = true },
+            colors = colors,
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SettingsSection("Messaging", colors) {
-            SettingsItem(
-                icon = Icons.Default.Send,
-                title = "Bot Tokens",
-                subtitle = "Configure Telegram / Discord / Feishu / Slack",
-                onClick = { showMessagingDialog = true },
-                colors = colors,
-            )
-        }
+        MessagingSection(
+            onShowDialog = { showMessagingDialog = true },
+            colors = colors,
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SettingsSection("Security", colors) {
-            SettingsItem(
-                icon = Icons.Default.Security,
-                title = "Audit Log",
-                subtitle = "${auditEntries.size} recent tool executions",
-                onClick = { showAuditLog = !showAuditLog },
-                colors = colors,
-            )
-            if (showAuditLog && auditEntries.isNotEmpty()) {
-                HorizontalDivider(color = colors.surface, thickness = 1.dp)
-                val fmt = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-                for (entry in auditEntries.take(15)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.Top,
-                    ) {
-                        Text(
-                            fmt.format(Date(entry.timestamp)),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = colors.textMuted,
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "${if (entry.success) "✓" else "✗"} ${entry.toolId}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (entry.success) AccentGreen else AccentRed,
-                            )
-                            if (entry.args.isNotBlank()) {
-                                Text(
-                                    entry.args.take(60),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colors.textMuted,
-                                    maxLines = 1,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        SecuritySection(
+            auditEntries = auditEntries,
+            showAuditLog = showAuditLog,
+            onToggleAuditLog = { showAuditLog = !showAuditLog },
+            colors = colors,
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SettingsSection("About", colors) {
-            SettingsItem(
-                icon = Icons.Default.Info, title = "PocketClaw",
-                subtitle = "v0.4.0 — Your pocket butler, no server needed",
-                onClick = {}, colors = colors,
-            )
-        }
+        AboutSection(colors = colors)
 
         Spacer(modifier = Modifier.height(32.dp))
     }

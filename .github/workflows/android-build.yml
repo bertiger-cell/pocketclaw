@@ -3,6 +3,8 @@ name: Build Android APK
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -37,12 +39,12 @@ jobs:
 
       - name: Run Lint
         working-directory: PocketClaw/android
-        run: ./gradlew lintDebug --no-daemon
+        run: ./gradlew lintDebug --no-daemon --parallel --build-cache
         continue-on-error: true
 
       - name: Build Debug APK
         working-directory: PocketClaw/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleDebug --no-daemon --parallel --build-cache
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v5

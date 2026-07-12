@@ -1,112 +1,111 @@
 # Skills für PocketClaw
 
-> Stand: Juli 2026 — Aus dem Skill Hub Katalog (1943 Skills) gefiltert.
+> Stand: Juli 2026 — Aus 1943 verfügbaren Skills gefiltert auf Relevanz für PocketClaw.
 > Alle Skills sind unter **Skills > Skill Hub** in der App installierbar.
 
 ---
 
-## 📱 Android & Kotlin
+## 📱 Android & Kotlin (Core)
 
-| Skill | Kategorie | Nutzen für PocketClaw |
-|-------|-----------|----------------------|
-| **android-dev** | mobile | Allgemeine Android-Entwicklungs-Guides (Kotlin, Gradle, APK) |
-| **android-jetpack-compose-expert** | mobile | Jetpack Compose Best Practices, State Management, Performance |
-| **android-cli** | tools | ADB-Befehle, Build-Tools, SDK-Management |
-| **kotlin-coroutines-expert** | development | Koroutinen & Flow Patterns für die async-Verarbeitung |
-| **earllm-build** | uncategorized | Kotlin/Compose App mit Bluetooth – ähnliches Projekt! |
+| Skill | Wieso relevant |
+|-------|---------------|
+| **android-dev** | Production-Grade Android Guide — Architecture, UI, Testing, CI/CD |
+| **android-jetpack-compose-expert** | Compose State Management, Navigation, Performance, Material3 |
+| **kotlin-coroutines-expert** | Coroutines & Flow Patterns — genau das für unsere async Download/Inference-Logik |
+| **android-cli** | ADB-Befehle, Build-Tools, SDK-Management |
+| **earllm-build** | Ähnliches Projekt! Kotlin/Compose App mit Bluetooth + LLM Pipeline |
+| **android-ui-journey-testing** | UI-Journey-Tests für Android |
+| **android_ui_verification** | E2E UI Tests mit ADB |
 
-## ☁️ GitHub & CI/CD
+## 🏗️ Architecture & Code Quality
 
-| Skill | Kategorie | Nutzen |
-|-------|-----------|--------|
-| **github-actions-advanced** | devops | CI/CD Workflows optimieren (unser Build läuft auf GH Actions) |
-| **github-actions-debugger** | devops | Fehlgeschlagene Workflows analysieren (genau das was wir brauchen) |
-| **github-actions-templates** | workflow | Fertige Workflow-Patterns für Build/Test/Deploy |
-| **gha-security-review** | security | GitHub Actions auf Sicherheitslücken prüfen |
-| **cicd-automation-workflow-automate** | automation | CI/CD Automatisierung |
-| **agentic-actions-auditor** | ai-ml | Workflow-Security für AI-Agent-Integrationen |
-
-## 🎨 UI & Animation
-
-| Skill | Kategorie | Nutzen |
-|-------|-----------|--------|
-| **android-jetpack-compose-expert** | mobile | Compose Animationen, Layout-Optimierung |
-| **kotlin** | super-code | Kotlin-spezifische Code-Richtlinien |
-| **bento-ui** | design-it | Modulare Grid-Karten, Apple-Dashboard-Stil |
-| **ai-native-ui** | design-it | Conversational Interfaces, Adaptive Layouts |
+| Skill | Wieso relevant |
+|-------|---------------|
+| **architecture-patterns** | Clean Architecture, Hexagonal, DDD — für den SettingsScreen Refactor |
+| **code-refactoring-refactor-clean** | SOLID, Clean Code — SettingsScreen 866→Sub-Components |
+| **code-refactoring-tech-debt** | Technical Debt identifizieren & priorisieren |
+| **code-simplification** | Code klar und wartbar halten |
+| **code-review-checklist** | Code Review Checklist für Funktionalität, Security, Performance |
+| **api-design-principles** | API Design — relevant für Groq/Nexa/LiteRT-LM Integration |
 
 ## ⚡ Performance & Optimierung
 
-| Skill | Kategorie | Nutzen |
-|-------|-----------|--------|
-| **code-refactoring-refactor-clean** | code-quality | Clean Code, SOLID Patterns |
-| **code-refactoring-tech-debt** | development | Technical Debt identifizieren & priorisieren |
-| **code-simplification** | development | Code klar und wartbar halten |
-| **application-performance-performance-optimization** | development | App-Performance, Memory, Network-Optimierung |
-| **zipai-optimizer** | agent-behavior | Token-Optimierung für Prompt-Caching |
+| Skill | Wieso relevant |
+|-------|---------------|
+| **application-performance-performance-optimization** | Memory, Network, Startup-Optimierung |
+| **zipai-optimizer** | Token-Optimierung, Prompt-Caching — für den Agent/Chat |
+| **performance-engineer** | Performance-Profiling und Bottleneck-Analyse |
 
 ## 🧪 Testing
 
-| Skill | Kategorie | Nutzen |
-|-------|-----------|--------|
-| **android-ui-journey-testing** | testing | XML-basierte UI-Tests für Android |
-| **android_ui_verification** | test-automation | E2E UI Tests mit ADB |
-| **test-automator** | test-automation | Selbstheilende UI-Tests |
-| **advanced-evaluation** | ai-ml | LLM-as-Judge Evaluierungen |
-| **agent-evaluation** | ai-agents | Behavioral Testing für AI Agents |
+| Skill | Wieso relevant |
+|-------|---------------|
+| **test-driven-development** | TDD Workflow — für die offenen Unit Tests |
+| **test-automator** | Selbstheilende UI-Tests |
+| **testing-patterns** | Test Patterns, Mocking, Factory Functions |
+| **advanced-evaluation** | LLM-as-Judge Evaluierung — Modell-Qualität testen |
+| **agent-evaluation** | Behavioral Testing für den AI Agent |
+
+## ☁️ CI/CD & GitHub
+
+| Skill | Wieso relevant |
+|-------|---------------|
+| **github-actions-advanced** | CI/CD Workflows optimieren (unser Build läuft auf GH Actions) |
+| **github-actions-debugger** | Fehlgeschlagene Workflows analysieren |
+| **github-actions-templates** | Fertige Build/Test/Deploy Patterns |
+| **gha-security-review** | GitHub Actions Sicherheitslücken prüfen |
+| **cicd-automation-workflow-automate** | CI/CD Automatisierung |
 
 ## 🔒 Security
 
-| Skill | Kategorie | Nutzen |
-|-------|-----------|--------|
-| **007** | security | Security Audit, Hardening, Threat Modeling |
-| **anti-deception** | uncategorized | Schutz vor Prompt-Injection |
-| **zeroize-audit** | security | Fehlende Zeroisierung sensibler Daten erkennen |
-| **owasp-mobile** (ähnlich: 007) | security | OWASP Mobile Top 10 Checks |
-
-## 🏗️ Architecture
-
-| Skill | Kategorie | Nutzen |
-|-------|-----------|--------|
-| **architecture-patterns** | architecture | Clean/Hexagonal/DDD Patterns |
-| **api-and-interface-design** | backend | Stabile API-Schnittstellen |
-| **code-refactoring-refactor-clean** | code-quality | SOLID Prinzipien für den Kotlin-Code |
+| Skill | Wieso relevant |
+|-------|---------------|
+| **007** | Security Audit, Hardening, Threat Modeling |
+| **security-audit** | Web App + API Security Testing |
+| **agentic-actions-auditor** | AI-Agent Workflow Security |
 
 ## 🧠 AI/ML Integration
 
-| Skill | Kategorie | Nutzen |
-|-------|-----------|--------|
-| **ai-engineer** | ai-ml | Production-Ready LLM Apps, RAG, Vector Search |
-| **autonomous-agents** | ai-ml | Tool Use, Memory Systems, Multi-Agent |
-| **agent-tool-builder** | ai-ml | Eigene Tools für AI Agents bauen |
-| **ai-md** | ai-ml | CLAUDE.md in AI-native Labels konvertieren |
+| Skill | Wieso relevant |
+|-------|---------------|
+| **ai-engineer** | Production-Ready LLM Apps, RAG, Vector Search |
+| **ai-agent-development** | Autonomous Agents, Multi-Agent, Orchestration |
+| **autonomous-agents** | Tool Use, Memory Systems |
+| **autonomous-agent-patterns** | Agent Design Patterns (Cline/Codex-inspiriert) |
+| **agent-orchestrator** | Multi-Agent Orchestrierung |
+| **agent-memory** | Agent Memory Systeme |
+| **agent-memory-systems** | Memory Architecture für Agents |
 
-## 🔧 Nützliche Tools
+## 🎨 UI Design
 
-| Skill | Kategorie | Nutzen |
-|-------|-----------|--------|
-| **web_search** (in App bereits) | — | DuckDuckGo-Suche (bereits integriert) |
-| **agent-self-scheduling** | agent-orchestration | Cron-gesteuerte AI Agent Runs |
-| **algorithmic-art** | graphics-processing | Visuelle Algorithmen für Crab-Animationen |
-| **anti-sleep** | operations | Mac wach halten bei langen Builds |
-
----
-
-## 📊 Zusammenfassung
-
-**Top 10 Skills für PocketClaw (nach Relevanz):**
-
-1. **android-jetpack-compose-expert** — UI/Performance verbessern
-2. **kotlin-coroutines-expert** — Async-Code optimieren
-3. **github-actions-debugger** — Workflow-Fehler fixen
-4. **code-refactoring-refactor-clean** — Code-Qualität
-5. **application-performance-performance-optimization** — Performance
-6. **android-ui-journey-testing** — UI-Tests
-7. **007 (Security)** — Sicherheits-Audit
-8. **ai-engineer** — LLM-Integration verbessern
-9. **autonomous-agents** — Agent-Framework optimieren
-10. **bento-ui** — Modernes UI-Redesign
+| Skill | Wieso relevant |
+|-------|---------------|
+| **bento-ui** | Modulare Grid-Karten, Apple-Dashboard-Stil |
+| **baseline-ui** | Baseline UI Komponenten |
 
 ---
 
-*Erstellt aus dem Skill Hub Katalog (1943 Skills). Installation in der App unter Skills > Skill Hub.*
+## 🔑 Top 10 Priorität
+
+| # | Skill | Wieso |
+|---|-------|-------|
+| 1 | **android-jetpack-compose-expert** | UI-Optimierung, Animationen, State Management |
+| 2 | **kotlin-coroutines-expert** | Coroutines/Flow für async Download/Inference |
+| 3 | **github-actions-debugger** | Workflow-Fehler analysieren & fixen |
+| 4 | **code-refactoring-refactor-clean** | SettingsScreen 866→Sub-Components |
+| 5 | **application-performance-performance-optimization** | Memory/Startup-Optimierung |
+| 6 | **test-driven-development** | Unit Tests für ModelDownloader, InferenceService |
+| 7 | **007** | OWASP Mobile, Hardening, Audit |
+| 8 | **ai-engineer** | LLM-Integration, RAG verbessern |
+| 9 | **autonomous-agent-patterns** | Agent Tool-Use & Memory optimieren |
+| 10 | **github-actions-advanced** | CI/CD Pipeline verschlanken |
+
+---
+
+## 📂 Datei-Referenz
+
+```
+SKILLS_FOR_POCKETCLAW.md  ← diese Datei
+.gitignore                ← Skill-Dateien sind nicht im Repo
+PocketClaw/android/       ← App-Code
+```

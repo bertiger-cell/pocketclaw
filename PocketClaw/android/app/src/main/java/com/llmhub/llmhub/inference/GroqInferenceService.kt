@@ -324,7 +324,7 @@ class GroqInferenceService(private val context: Context) : InferenceService {
             // System message with tool instructions
             put(JSONObject().apply {
                 put("role", "system")
-                put("content", "Du bist PocketClaw, ein hilfreicher KI-Assistent.\nAntworte auf Deutsch, kurz und präzise.\n\nDu hast Zugriff auf Werkzeuge. Verwende sie wenn sie helfen. Wenn kein Werkzeug benötigt wird, antworte einfach normal.")
+                put("content", "Du bist PocketClaw, ein hilfreicher KI-Assistent.\nAntworte auf Deutsch, kurz und präzise.\n\nDu hast Zugriff auf Werkzeuge. Verwende sie wenn sie helfen. Wenn kein Werkzeug benötigt wird, antworte einfach normal.\n\nWICHTIG: Antworte NUR mit dem Ergebnis. Keine Meta-Kommentare über Werkzeuge oder Prozesse.")
             })
             put(JSONObject().apply {
                 put("role", "user")

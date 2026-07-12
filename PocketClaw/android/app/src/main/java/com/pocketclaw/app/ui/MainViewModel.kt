@@ -39,11 +39,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val TAG = "MainVM"
+        private const val MAX_TOOL_CALLS_PER_TURN = 3
+        private const val TOOL_TIMEOUT_MS = 30_000L
     }
 
     private val app = application as PocketClawApplication
@@ -126,6 +129,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val selectedGroqModel: StateFlow<String> = _selectedGroqModel.asStateFlow()
 
     // Generic model download state
+    @Stable
     data class ModelDownloadState(
         val isDownloading: Boolean = false,
         val progress: Float = 0f,
@@ -141,6 +145,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _lastError = MutableStateFlow<String?>(null)
     val lastError: StateFlow<String?> = _lastError.asStateFlow()
+
+    // Token tracking for cost awareness
+    private val _totalTokensUsed = MutableStateFlow(0)
+    val totalTokensUsed: StateFlow<Int> = _totalTokensUsed.asStateFlow()
+    private val _sessionTokensUsed = MutableStateFlow(0)
+    val sessionTokensUsed: StateFlow<Int> = _sessionTokensUsed.asStateFlow()
 
     val auditEntries: List<AuditLog.Entry> get() = app.auditLog.recent()
 
@@ -290,12 +300,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     io.ktor.client.HttpClient(), app,
                     com.pocketclaw.app.BuildConfig.HF_TOKEN.ifBlank { null },
                 )
-                downloader.downloadModel(model).collect { status ->
-                    val pct = if (status.totalBytes > 0)
-                        (status.downloadedBytes.toFloat() / status.totalBytes).coerceIn(0f, 1f) else 0f
+                val downloadResult = withTimeoutOrNull(600_000L) { // 10 min timeout
+                    downloader.downloadModel(model).collect { status ->
+                        val pct = if (status.totalBytes > 0)
+                            (status.downloadedBytes.toFloat() / status.totalBytes).coerceIn(0f, 1f) else 0f
+                        _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
+                            isDownloading = true, progress = pct, modelId = modelId
+                        ))
+                    }
+                }
+                if (downloadResult == null) {
+                    _lastError.value = "Download-Timeout für ${model.name} (10 Min. Limit)"
                     _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
-                        isDownloading = true, progress = pct, modelId = modelId
+                        isDownloading = false, modelId = modelId
                     ))
+                    return@launch
                 }
                 // Verify
                 val modelsDir = java.io.File(app.filesDir, "models")
@@ -452,6 +471,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _inputText.value = ""
 
         app.toolExecutor.resetTurn()
+        toolCallCount = 0
 
         if (SkillRouter.isSkillCreationRequest(text)) {
             handleSkillCreation(text)
@@ -466,7 +486,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ): PromptAssembler.AssembledPrompt {
         // For Groq: include installed skills as context
         if (_llmMode.value == "groq") {
-            val recentHistory = _messages.value.takeLast(10).map { msg ->
+            val recentHistory = _messages.value.takeLast(15).map { msg ->
                 PromptAssembler.ChatTurn(
                     role = if (msg.isUser) "user" else "assistant",
                     content = msg.text,
@@ -505,7 +525,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
 
-        val recentHistory = _messages.value.takeLast(20).map { msg ->
+        val recentHistory = _messages.value.takeLast(15).map { msg ->
             PromptAssembler.ChatTurn(
                 role = if (msg.isUser) "user" else "assistant",
                 content = msg.text,
@@ -537,12 +557,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val sb = StringBuilder()
 
-                if (mode == "groq") {
-                    generateViaGroq(assembled, sb, placeholderId)
-                } else if (mode == "api") {
-                    generateViaApi(assembled, sb, placeholderId)
-                } else {
-                    generateViaLocal(assembled, userText, sb, placeholderId)
+                val genResult = withTimeoutOrNull(120_000L) { // 2 min timeout per request
+                    if (mode == "groq") {
+                        generateViaGroq(assembled, sb, placeholderId)
+                    } else if (mode == "api") {
+                        generateViaApi(assembled, sb, placeholderId)
+                    } else {
+                        generateViaLocal(assembled, userText, sb, placeholderId)
+                    }
+                }
+
+                if (genResult == null && sb.isEmpty()) {
+                    _messages.update { list ->
+                        list.map { if (it.id == placeholderId) it.copy(text = "⏱️ Antwort-Timeout (2 Min.). Versuch es erneut.") else it }
+                    }
+                    return@launch
                 }
 
                 val rawOutput = sb.toString()
@@ -576,12 +605,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private var toolCallCount = 0
+
     private suspend fun handleToolCalls(
         calls: List<ToolParser.ParsedCall>,
         rawOutput: String,
         placeholderId: String,
         userText: String,
     ) {
+        toolCallCount++
+        if (toolCallCount > MAX_TOOL_CALLS_PER_TURN) {
+            Log.w(TAG, "Max tool calls ($MAX_TOOL_CALLS_PER_TURN) reached, stopping")
+            _messages.update { list ->
+                list.map { if (it.id == placeholderId) it.copy(text = "🔧 Tool-Limit erreicht ($MAX_TOOL_CALLS_PER_TURN/Antwort)") else it }
+            }
+            toolCallCount = 0
+            return
+        }
+
         val textPart = ToolParser.stripToolMarkers(rawOutput)
         val cleaned = withContext(Dispatchers.IO) { bondEngine.processResponse(textPart) }
 
@@ -590,12 +631,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         val call = calls.first()
-        Log.d(TAG, "Tool call: ${call.toolId}(${call.args.take(60)})")
+        Log.d(TAG, "Tool call #${toolCallCount}: ${call.toolId}(${call.args.take(60)})")
 
-        val result = toolExecutor.execute(call) { confirmMsg ->
-            val deferred = ToolConfirmState.request(confirmMsg)
-            deferred.await()
+        val startTime = System.currentTimeMillis()
+        val result = withTimeoutOrNull(TOOL_TIMEOUT_MS) {
+            toolExecutor.execute(call) { confirmMsg ->
+                val deferred = ToolConfirmState.request(confirmMsg)
+                deferred.await()
+            }
         }
+        val elapsed = System.currentTimeMillis() - startTime
+
+        if (result == null) {
+            Log.w(TAG, "Tool ${call.toolId} timed out after ${elapsed}ms")
+            _messages.update { list ->
+                list.map { if (it.id == placeholderId) it.copy(text = "⏱️ Tool ${call.toolId} hat zu lange gedauert (${elapsed}ms)") else it }
+            }
+            toolCallCount = 0
+            return
+        }
+
+        Log.d(TAG, "Tool ${call.toolId} completed in ${elapsed}ms, success=${result.success}")
 
         val tool = ToolRegistry.get(call.toolId)
         val summary = tool?.summarize(result.output, 600) ?: result.output.take(600)

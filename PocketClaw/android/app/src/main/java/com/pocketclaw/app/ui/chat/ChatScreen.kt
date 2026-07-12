@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
@@ -24,7 +23,6 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -41,14 +38,13 @@ import com.pocketclaw.app.R
 import com.llmhub.llmhub.data.LLMModel
 import com.pocketclaw.app.ui.theme.*
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.SmartToy
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.PhoneAndroid
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+@Immutable
 data class ChatMessage(
     val id: String = java.util.UUID.randomUUID().toString(),
     val text: String,

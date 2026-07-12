@@ -41,8 +41,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.runtime.Stable
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+
+    /** Ensures only one model download runs at a time (coroutines-expert pattern) */
+    private val downloadMutex = Mutex()
 
     companion object {
         private const val TAG = "MainVM"
@@ -289,67 +294,75 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun downloadModel(model: LLMModel) {
         val modelId = model.name
-        if (_modelDownloads.value[modelId]?.isDownloading == true) return
+        // Global lock: reject if ANY download is already running
+        if (_modelDownloads.value.any { it.value.isDownloading }) {
+            Log.w(TAG, "Download blocked: another download is already running")
+            return
+        }
 
         viewModelScope.launch {
-            _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
-                isDownloading = true, progress = 0f, modelId = modelId
-            ))
-            _lastError.value = null
-            try {
-                val downloader = ModelDownloader(
-                    io.ktor.client.HttpClient(), app,
-                    com.pocketclaw.app.BuildConfig.HF_TOKEN.ifBlank { null },
-                )
-                val downloadResult = withTimeoutOrNull(600_000L) { // 10 min timeout
-                    downloader.downloadModel(model).collect { status ->
-                        val pct = if (status.totalBytes > 0)
-                            (status.downloadedBytes.toFloat() / status.totalBytes).coerceIn(0f, 1f) else 0f
-                        _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
-                            isDownloading = true, progress = pct, modelId = modelId
-                        ))
+            downloadMutex.withLock {
+                _modelDownloads.update { it + (modelId to ModelDownloadState(
+                    isDownloading = true, progress = 0f, modelId = modelId
+                )) }
+                _lastError.value = null
+                try {
+                    val downloader = ModelDownloader(
+                        io.ktor.client.HttpClient(), app,
+                        com.pocketclaw.app.BuildConfig.HF_TOKEN.ifBlank { null },
+                    )
+                    val downloadResult = withTimeoutOrNull(600_000L) { // 10 min timeout
+                        downloader.downloadModel(model).collect { status ->
+                            val pct = if (status.totalBytes > 0)
+                                (status.downloadedBytes.toFloat() / status.totalBytes).coerceIn(0f, 1f) else 0f
+                            _modelDownloads.update { it + (modelId to ModelDownloadState(
+                                isDownloading = true, progress = pct, modelId = modelId
+                            )) }
+                        }
                     }
-                }
-                if (downloadResult == null) {
-                    _lastError.value = "Download-Timeout für ${model.name} (10 Min. Limit)"
-                    _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
-                        isDownloading = false, modelId = modelId
-                    ))
-                    return@launch
-                }
-                // Verify
-                val modelsDir = java.io.File(app.filesDir, "models")
-                val targetFile = java.io.File(modelsDir, model.localFileName())
-                if (targetFile.exists() && targetFile.length() > 1_000_000) {
-                    // Validate downloaded file is not an HTML error page
-                    val validationError = validateDownloadedFile(targetFile, model.modelFormat)
-                    if (validationError != null) {
-                        Log.w(TAG, "Download validation failed for ${model.name}: $validationError")
-                        targetFile.delete()
-                        _lastError.value = validationError
-                        _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
+                    if (downloadResult == null) {
+                        _lastError.value = "Download-Timeout für ${model.name} (10 Min. Limit)"
+                        _modelDownloads.update { it + (modelId to ModelDownloadState(
                             isDownloading = false, modelId = modelId
-                        ))
-                        _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - $validationError", isUser = false) }
-                    } else {
-                        _modelDownloads.value = _modelDownloads.value + (modelId to ModelDownloadState(
-                            downloaded = true, modelId = modelId
-                        ))
-                        _messages.update { it + ChatMessage(text = "${model.name} heruntergeladen! (${targetFile.length() / 1_000_000} MB) ✓", isUser = false) }
-                        loadFirstAvailableModel()
+                        )) }
+                        return@withLock
                     }
-                } else {
-                    val reason = if (targetFile.exists()) "Datei zu klein (${targetFile.length()} bytes)" else "Datei nicht gefunden"
-                    targetFile.delete()
-                    _lastError.value = "Download fehlgeschlagen: $reason"
-                    _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - $reason", isUser = false) }
+                    // Verify
+                    val modelsDir = java.io.File(app.filesDir, "models")
+                    val targetFile = java.io.File(modelsDir, model.localFileName())
+                    if (targetFile.exists() && targetFile.length() > 1_000_000) {
+                        val validationError = validateDownloadedFile(targetFile, model.modelFormat)
+                        if (validationError != null) {
+                            Log.w(TAG, "Download validation failed for ${model.name}: $validationError")
+                            targetFile.delete()
+                            _lastError.value = validationError
+                            _modelDownloads.update { it + (modelId to ModelDownloadState(
+                                isDownloading = false, modelId = modelId
+                            )) }
+                            _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - $validationError", isUser = false) }
+                        } else {
+                            _modelDownloads.update { it + (modelId to ModelDownloadState(
+                                downloaded = true, modelId = modelId
+                            )) }
+                            _messages.update { it + ChatMessage(text = "${model.name} heruntergeladen! (${targetFile.length() / 1_000_000} MB) ✓", isUser = false) }
+                            loadFirstAvailableModel()
+                        }
+                    } else {
+                        val reason = if (targetFile.exists()) "Datei zu klein (${targetFile.length()} bytes)" else "Datei nicht gefunden"
+                        targetFile.delete()
+                        _lastError.value = "Download fehlgeschlagen: $reason"
+                        _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - $reason", isUser = false) }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Download failed for ${model.name}: ${e.message}", e)
+                    _lastError.value = e.message
+                    _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - ${e.message}", isUser = false) }
+                } finally {
+                    _modelDownloads.update { current ->
+                        current + (modelId to (current[modelId]?.copy(isDownloading = false)
+                            ?: ModelDownloadState(modelId = modelId)))
+                    }
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Download failed for ${model.name}: ${e.message}", e)
-                _lastError.value = e.message
-                _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - ${e.message}", isUser = false) }
-            } finally {
-                _modelDownloads.value = _modelDownloads.value + (modelId to (_modelDownloads.value[modelId]?.copy(isDownloading = false) ?: ModelDownloadState(modelId = modelId)))
             }
         }
     }
@@ -421,9 +434,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 if (deleted || modelDir.exists()) {
                     // Update download state
-                    _modelDownloads.value = _modelDownloads.value + (model.name to ModelDownloadState(
+                    _modelDownloads.update { it + (model.name to ModelDownloadState(
                         downloaded = false, modelId = model.name
-                    ))
+                    )) }
                     if (currentModel?.name == model.name) {
                         currentModel = null
                         _isModelLoaded.value = false

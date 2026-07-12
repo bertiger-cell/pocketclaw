@@ -57,7 +57,6 @@ object DeviceInfo {
 
 object ModelData {
     val models = listOf(
-        // Qwen3-1.7B (LiteRT-LM) - Local on-device
         LLMModel(
             name = "Qwen3-1.7B (LiteRT-LM)",
             description = "Alibaba Qwen3-1.7B via LiteRT-LM. Works on ALL Android devices including Exynos. No special NPU required. (~2.1GB download)",
@@ -71,7 +70,6 @@ object ModelData {
             contextWindowSize = 32768,
             modelFormat = "litertlm"
         ),
-        // Qwen3-1.7B via Groq Cloud API (free tier)
         LLMModel(
             name = "Qwen3-1.7B (Groq Cloud)",
             description = "Alibaba Qwen3-1.7B via Groq free cloud API. Fast inference, no download needed. Requires internet + free Groq API key.",
@@ -86,8 +84,6 @@ object ModelData {
             modelFormat = "groq",
             groqModelId = "qwen/qwen3-1.7b"
         ),
-
-        // Gemma-3 1B Models
         LLMModel(
             name = "Gemma-3 1B (INT4, 2k)",
             description = "Google Gemma-3 1B with INT4 quantization and a 2k context window. Optimized for mobile devices. Ready to download from HuggingFace (529MB)",
@@ -140,8 +136,6 @@ object ModelData {
             contextWindowSize = 4096,
             modelFormat = "task"
         ),
-
-        // Llama-3.2 Models from vimal-yuvabe
         LLMModel(
             name = "Llama-3.2 1B (INT8)",
             description = "Meta's Llama 3.2 1B model with INT8 quantization. Optimized for on-device inference. Ready to download from HuggingFace (2.01GB)",
@@ -155,22 +149,6 @@ object ModelData {
             contextWindowSize = 4096,
             modelFormat = "task"
         ),
-        
-        LLMModel(
-            name = "Llama-3.2 3B (INT8)",
-            description = "Meta's Llama 3.2 3B model with INT8 quantization. Larger model for better performance. Ready to download from HuggingFace (5.11GB)",
-            url = "https://huggingface.co/vimal-yuvabe/llama-3.2-3b-tflite/resolve/main/llama-3.2-3B-q8.task?download=true",
-            category = "text", 
-            sizeBytes = 5491473637L, // 5.11GB (actual size from HuggingFace)
-            source = "Meta via vimal-yuvabe",
-            supportsVision = false,
-            supportsGpu = false,
-            requirements = ModelRequirements(minRamGB = 6, recommendedRamGB = 8),
-            contextWindowSize = 4096,
-            modelFormat = "task"
-        ),
-
-        // Llama-3.2 1B GGUF Models from bartowski
         LLMModel(
             name = "Llama-3.2 1B (IQ3_M)",
             description = "Llama 3.2 1B with IQ3_M quantization. Smallest size, great for low-memory devices. 128k context. (657MB)",
@@ -405,8 +383,6 @@ object ModelData {
             contextWindowSize = 131072,
             modelFormat = "gguf"
         ),
-
-        // Llama-3.2 3B GGUF Models from bartowski
         LLMModel(
             name = "Llama-3.2 3B (IQ3_M)",
             description = "Llama 3.2 3B with IQ3_M quantization. Smallest size, great for low-memory devices. 128k context. (1.6GB)",
@@ -590,469 +566,6 @@ object ModelData {
             modelFormat = "gguf"
         ),
         LLMModel(
-            name = "Llama-3.2 3B (Q6_K)",
-            description = "Llama 3.2 3B with Q6_K quantization. 6-bit, very high quality. 128k context. (2.64GB)",
-            url = "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q6_K.gguf?download=true",
-            category = "text",
-            sizeBytes = 2640000000L, // 2.64 GB
-            source = "Meta via bartowski",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 6),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Llama-3.2 3B (Q6_K_L)",
-            description = "Llama 3.2 3B with Q6_K_L quantization. Large 6-bit, highest quality. 128k context. (2.74GB)",
-            url = "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q6_K_L.gguf?download=true",
-            category = "text",
-            sizeBytes = 2740000000L, // 2.74 GB
-            source = "Meta via bartowski",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 6),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Llama-3.2 3B (Q8_0)",
-            description = "Llama 3.2 3B with Q8_0 quantization. 8-bit, near-original quality. 128k context. (3.42GB)",
-            url = "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q8_0.gguf?download=true",
-            category = "text",
-            sizeBytes = 3420000000L, // 3.42 GB
-            source = "Meta via bartowski",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 5, recommendedRamGB = 7),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Llama-3.2 3B (f16)",
-            description = "Llama 3.2 3B with f16 (full precision). Maximum quality, largest size. 128k context. (6.43GB)",
-            url = "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-f16.gguf?download=true",
-            category = "text",
-            sizeBytes = 6430000000L, // 6.43 GB
-            source = "Meta via bartowski",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 8, recommendedRamGB = 10),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-
-        // Granite 4.0 H-Tiny 7B models (IBM)
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q2_K)",
-            description = "IBM Granite 4.0 H-Tiny with Q2_K quantization. Smallest size. 128k context. (2.59GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q2_K.gguf?download=true",
-            category = "text",
-            sizeBytes = 2590000000L, // 2.59 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 3, recommendedRamGB = 4),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q3_K_S)",
-            description = "IBM Granite 4.0 H-Tiny with Q3_K_S quantization. Balanced size. 128k context. (3.06GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q3_K_S.gguf?download=true",
-            category = "text",
-            sizeBytes = 3060000000L, // 3.06 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 5),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q3_K_M)",
-            description = "IBM Granite 4.0 H-Tiny with Q3_K_M quantization. Good quality. 128k context. (3.35GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q3_K_M.gguf?download=true",
-            category = "text",
-            sizeBytes = 3350000000L, // 3.35 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 5),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q3_K_L)",
-            description = "IBM Granite 4.0 H-Tiny with Q3_K_L quantization. Better quality. 128k context. (3.6GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q3_K_L.gguf?download=true",
-            category = "text",
-            sizeBytes = 3600000000L, // 3.6 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 5),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q4_0)",
-            description = "IBM Granite 4.0 H-Tiny with Q4_0 quantization. Good balance. 128k context. (3.96GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q4_0.gguf?download=true",
-            category = "text",
-            sizeBytes = 3960000000L, // 3.96 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 5, recommendedRamGB = 6),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q4_K_S)",
-            description = "IBM Granite 4.0 H-Tiny with Q4_K_S quantization. High quality. 128k context. (4GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q4_K_S.gguf?download=true",
-            category = "text",
-            sizeBytes = 4000000000L, // 4 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 5, recommendedRamGB = 6),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q4_K_M)",
-            description = "IBM Granite 4.0 H-Tiny with Q4_K_M quantization. Very high quality. 128k context. (4.23GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q4_K_M.gguf?download=true",
-            category = "text",
-            sizeBytes = 4230000000L, // 4.23 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 5, recommendedRamGB = 6),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q4_1)",
-            description = "IBM Granite 4.0 H-Tiny with Q4_1 quantization. Enhanced quality. 128k context. (4.39GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q4_1.gguf?download=true",
-            category = "text",
-            sizeBytes = 4390000000L, // 4.39 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 5, recommendedRamGB = 6),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q5_K_S)",
-            description = "IBM Granite 4.0 H-Tiny with Q5_K_S quantization. Excellent quality. 128k context. (4.81GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q5_K_S.gguf?download=true",
-            category = "text",
-            sizeBytes = 4810000000L, // 4.81 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 6, recommendedRamGB = 7),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q5_0)",
-            description = "IBM Granite 4.0 H-Tiny with Q5_0 quantization. Near-lossless. 128k context. (4.81GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q5_0.gguf?download=true",
-            category = "text",
-            sizeBytes = 4810000000L, // 4.81 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 6, recommendedRamGB = 7),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q5_K_M)",
-            description = "IBM Granite 4.0 H-Tiny with Q5_K_M quantization. Superior quality. 128k context. (4.95GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q5_K_M.gguf?download=true",
-            category = "text",
-            sizeBytes = 4950000000L, // 4.95 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 6, recommendedRamGB = 7),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q5_1)",
-            description = "IBM Granite 4.0 H-Tiny with Q5_1 quantization. Premium quality. 128k context. (5.23GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q5_1.gguf?download=true",
-            category = "text",
-            sizeBytes = 5230000000L, // 5.23 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 6, recommendedRamGB = 7),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q6_K)",
-            description = "IBM Granite 4.0 H-Tiny with Q6_K quantization. Outstanding quality. 128k context. (5.71GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q6_K.gguf?download=true",
-            category = "text",
-            sizeBytes = 5710000000L, // 5.71 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 7, recommendedRamGB = 8),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (Q8_0)",
-            description = "IBM Granite 4.0 H-Tiny with Q8_0 quantization. Ultimate quality. 128k context. (7.39GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-Q8_0.gguf?download=true",
-            category = "text",
-            sizeBytes = 7390000000L, // 7.39 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 8, recommendedRamGB = 10),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Tiny (f16)",
-            description = "IBM Granite 4.0 H-Tiny with f16 (full precision). Maximum quality, largest size. 128k context. (13.9GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-tiny-GGUF/resolve/main/granite-4.0-h-tiny-f16.gguf?download=true",
-            category = "text",
-            sizeBytes = 13900000000L, // 13.9 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 14, recommendedRamGB = 16),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-
-        // Granite 4.0 H-Small 32B models (IBM)
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q2_K)",
-            description = "IBM Granite 4.0 H-Small with Q2_K quantization. Smallest size. 128k context. (11.8GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q2_K.gguf?download=true",
-            category = "text",
-            sizeBytes = 11800000000L, // 11.8 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 12, recommendedRamGB = 14),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q3_K_S)",
-            description = "IBM Granite 4.0 H-Small with Q3_K_S quantization. Balanced size. 128k context. (14.1GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q3_K_S.gguf?download=true",
-            category = "text",
-            sizeBytes = 14100000000L, // 14.1 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 14, recommendedRamGB = 16),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q3_K_M)",
-            description = "IBM Granite 4.0 H-Small with Q3_K_M quantization. Good quality. 128k context. (15.4GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q3_K_M.gguf?download=true",
-            category = "text",
-            sizeBytes = 15400000000L, // 15.4 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 15, recommendedRamGB = 18),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q3_K_L)",
-            description = "IBM Granite 4.0 H-Small with Q3_K_L quantization. Better quality. 128k context. (16.5GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q3_K_L.gguf?download=true",
-            category = "text",
-            sizeBytes = 16500000000L, // 16.5 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 16, recommendedRamGB = 20),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q4_0)",
-            description = "IBM Granite 4.0 H-Small with Q4_0 quantization. Good balance. 128k context. (18.3GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q4_0.gguf?download=true",
-            category = "text",
-            sizeBytes = 18300000000L, // 18.3 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 18, recommendedRamGB = 22),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q4_K_S)",
-            description = "IBM Granite 4.0 H-Small with Q4_K_S quantization. High quality. 128k context. (18.4GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q4_K_S.gguf?download=true",
-            category = "text",
-            sizeBytes = 18400000000L, // 18.4 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 18, recommendedRamGB = 22),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q4_K_M)",
-            description = "IBM Granite 4.0 H-Small with Q4_K_M quantization. Very high quality. 128k context. (19.5GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q4_K_M.gguf?download=true",
-            category = "text",
-            sizeBytes = 19500000000L, // 19.5 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 19, recommendedRamGB = 24),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q4_1)",
-            description = "IBM Granite 4.0 H-Small with Q4_1 quantization. Enhanced quality. 128k context. (20.3GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q4_1.gguf?download=true",
-            category = "text",
-            sizeBytes = 20300000000L, // 20.3 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 20, recommendedRamGB = 24),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q5_0)",
-            description = "IBM Granite 4.0 H-Small with Q5_0 quantization. Near-lossless. 128k context. (22.2GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q5_0.gguf?download=true",
-            category = "text",
-            sizeBytes = 22200000000L, // 22.2 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 22, recommendedRamGB = 26),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q5_K_S)",
-            description = "IBM Granite 4.0 H-Small with Q5_K_S quantization. Excellent quality. 128k context. (22.2GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q5_K_S.gguf?download=true",
-            category = "text",
-            sizeBytes = 22200000000L, // 22.2 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 22, recommendedRamGB = 26),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q5_K_M)",
-            description = "IBM Granite 4.0 H-Small with Q5_K_M quantization. Superior quality. 128k context. (22.9GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q5_K_M.gguf?download=true",
-            category = "text",
-            sizeBytes = 22900000000L, // 22.9 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 23, recommendedRamGB = 26),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q5_1)",
-            description = "IBM Granite 4.0 H-Small with Q5_1 quantization. Premium quality. 128k context. (24.2GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q5_1.gguf?download=true",
-            category = "text",
-            sizeBytes = 24200000000L, // 24.2 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 24, recommendedRamGB = 28),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q6_K)",
-            description = "IBM Granite 4.0 H-Small with Q6_K quantization. Outstanding quality. 128k context. (26.5GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q6_K.gguf?download=true",
-            category = "text",
-            sizeBytes = 26500000000L, // 26.5 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 26, recommendedRamGB = 30),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (Q8_0)",
-            description = "IBM Granite 4.0 H-Small with Q8_0 quantization. Ultimate quality. 128k context. (34.3GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-Q8_0.gguf?download=true",
-            category = "text",
-            sizeBytes = 34300000000L, // 34.3 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 34, recommendedRamGB = 40),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "Granite 4.0 H-Small (f16)",
-            description = "IBM Granite 4.0 H-Small with f16 (full precision). Maximum quality, largest size. 128k context. (64.4GB)",
-            url = "https://huggingface.co/ibm-granite/granite-4.0-h-small-GGUF/resolve/main/granite-4.0-h-small-f16.gguf?download=true",
-            category = "text",
-            sizeBytes = 64400000000L, // 64.4 GB
-            source = "IBM Granite",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 64, recommendedRamGB = 80),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-
-        // Phi-4 Mini updated to user-provided litertlm link
-        LLMModel(
-            name = "Phi-4 Mini (INT8, 4k)",
-            description = "Phi-4 Mini INT8 variant in LiteRT LM format (litertlm).",
-            url = "https://huggingface.co/litert-community/Phi-4-mini-instruct/resolve/main/Phi-4-mini-instruct_multi-prefill-seq_q8_ekv4096.litertlm?download=true",
-            category = "text",
-            sizeBytes = 3910090752L, // 3.91 GB as reported on HuggingFace file page
-            source = "Microsoft via LiteRT Community",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 5, recommendedRamGB = 7),
-            contextWindowSize = 4096,
-            modelFormat = "litertlm"
-        ),
-
-        // LFM-2.5 1.2B Instruct Models (LiquidAI GGUF)
-        LLMModel(
             name = "LFM-2.5 1.2B Instruct (Q4_0)",
             description = "LiquidAI's 1.2B instruct model. Q4_0 quantization. 128k context.",
             url = "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF/resolve/main/LFM2.5-1.2B-Instruct-Q4_0.gguf?download=true",
@@ -1091,8 +604,6 @@ object ModelData {
             contextWindowSize = 128000,
             modelFormat = "gguf"
         ),
-        
-        // LFM-2.5 1.2B Thinking Models (LiquidAI GGUF)
         LLMModel(
             name = "LFM-2.5 1.2B Thinking (Q4_0)",
             description = "LiquidAI's 1.2B thinking model. Q4_0 quantization. 128k context. Supports 'thinking' mode.",
@@ -1132,75 +643,6 @@ object ModelData {
             contextWindowSize = 128000,
             modelFormat = "gguf"
         ),
-
-        // LFM2-24B-A2B Models (LiquidAI GGUF - MoE, 2B active params)
-        LLMModel(
-            name = "LFM2-24B-A2B (Q4_0)",
-            description = "LiquidAI's MoE model with 24B total parameters but only 2B active per token. Q4_0 quantization. 32k context. Multilingual (9 languages).",
-            url = "https://huggingface.co/LiquidAI/LFM2-24B-A2B-GGUF/resolve/main/LFM2-24B-A2B-Q4_0.gguf?download=true",
-            category = "text",
-            sizeBytes = 13500000000L, // 13.5 GB from HuggingFace
-            source = "LiquidAI",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 16, recommendedRamGB = 18),
-            contextWindowSize = 32768,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "LFM2-24B-A2B (Q4_K_M)",
-            description = "LiquidAI's MoE model with 24B total parameters but only 2B active per token. Q4_K_M quantization. 32k context. Multilingual (9 languages).",
-            url = "https://huggingface.co/LiquidAI/LFM2-24B-A2B-GGUF/resolve/main/LFM2-24B-A2B-Q4_K_M.gguf?download=true",
-            category = "text",
-            sizeBytes = 14400000000L, // 14.4 GB from HuggingFace
-            source = "LiquidAI",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 16, recommendedRamGB = 18),
-            contextWindowSize = 32768,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "LFM2-24B-A2B (Q5_K_M)",
-            description = "LiquidAI's MoE model with 24B total parameters but only 2B active per token. Q5_K_M quantization for better quality. 32k context. Multilingual (9 languages).",
-            url = "https://huggingface.co/LiquidAI/LFM2-24B-A2B-GGUF/resolve/main/LFM2-24B-A2B-Q5_K_M.gguf?download=true",
-            category = "text",
-            sizeBytes = 16900000000L, // 16.9 GB from HuggingFace
-            source = "LiquidAI",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 18, recommendedRamGB = 24),
-            contextWindowSize = 32768,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "LFM2-24B-A2B (Q6_K)",
-            description = "LiquidAI's MoE model with 24B total parameters but only 2B active per token. Q6_K quantization for high quality. 32k context. Multilingual (9 languages).",
-            url = "https://huggingface.co/LiquidAI/LFM2-24B-A2B-GGUF/resolve/main/LFM2-24B-A2B-Q6_K.gguf?download=true",
-            category = "text",
-            sizeBytes = 19600000000L, // 19.6 GB from HuggingFace
-            source = "LiquidAI",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 20, recommendedRamGB = 24),
-            contextWindowSize = 32768,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "LFM2-24B-A2B (Q8_0)",
-            description = "LiquidAI's MoE model with 24B total parameters but only 2B active per token. Q8_0 quantization - near full quality. 32k context. Multilingual (9 languages).",
-            url = "https://huggingface.co/LiquidAI/LFM2-24B-A2B-GGUF/resolve/main/LFM2-24B-A2B-Q8_0.gguf?download=true",
-            category = "text",
-            sizeBytes = 25400000000L, // 25.4 GB from HuggingFace
-            source = "LiquidAI",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 28, recommendedRamGB = 32),
-            contextWindowSize = 32768,
-            modelFormat = "gguf"
-        ),
-
-        // LFM-2.5 1.2B Instruct Models (ONNX) - Q4 and Q8 variants (sizeBytes = sum of all downloaded files from HF)
         LLMModel(
             name = "LFM-2.5 1.2B Instruct (ONNX Q4)",
             description = "LiquidAI's 1.2B instruction model in ONNX format. Q4 quantization for balanced quality and size. 128k context. Requires downloading 2 files.",
@@ -1237,8 +679,6 @@ object ModelData {
                 "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-ONNX/resolve/main/tokenizer_config.json?download=true"
             )
         ),
-
-        // LFM-2.5 1.2B Thinking Models (ONNX) - Q4 and Q8 variants (sizeBytes = sum of all downloaded files from HF)
         LLMModel(
             name = "LFM-2.5 1.2B Thinking (ONNX Q4)",
             description = "LiquidAI's 1.2B reasoning model in ONNX format. Q4 quantization for balanced quality and size. 128k context. Requires downloading 2 files.",
@@ -1275,8 +715,6 @@ object ModelData {
                 "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Thinking-ONNX/resolve/main/tokenizer_config.json?download=true"
             )
         ),
-
-        // LFM-2.5 VL 1.6B Models (Vision-Language GGUF)
         LLMModel(
             name = "LFM-2.5 VL 1.6B (BF16)",
             description = "LiquidAI's 1.6B vision-language model. BF16 precision. Supports vision + text. Requires mmproj for vision.",
@@ -1355,9 +793,7 @@ object ModelData {
             contextWindowSize = 0,
             modelFormat = "gguf"
         ),
-
-        // LFM-2.5 VL 1.6B Models (Vision-Language ONNX)
-        // LLMModel(
+        LLMModel(
         //     name = "LFM-2.5 VL 1.6B (ONNX Q4)",
         //     description = "LiquidAI's 1.6B vision-language model in ONNX format. Q4 quantization. Supports vision + text. Requires multiple files.",
         //     url = "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/onnx/decoder_q4.onnx?download=true",
@@ -1380,31 +816,6 @@ object ModelData {
         //         "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/tokenizer_config.json?download=true"
         //     )
         // ),
-        // LLMModel(
-        //     name = "LFM-2.5 VL 1.6B (ONNX Q8)",
-        //     description = "LiquidAI's 1.6B vision-language model in ONNX format. Q8 quantization for higher quality. Supports vision + text.",
-        //     url = "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/onnx/decoder_q8.onnx?download=true",
-        //     category = "multimodal",
-        //     sizeBytes = 2540000000L, // decoder_q8 + embed_images_q8 + embed_tokens_fp16 + tokenizer (~2.54 GB)
-        //     source = "LiquidAI",
-        //     supportsVision = true,
-        //     supportsGpu = false,
-        //     requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 6),
-        //     contextWindowSize = 128000,
-        //     modelFormat = "onnx",
-        //     additionalFiles = listOf(
-        //         "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/onnx/decoder_q8.onnx_data?download=true",
-        //         "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/onnx/embed_images_q8.onnx?download=true",
-        //         "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/onnx/embed_images_q8.onnx_data?download=true",
-        //         "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/onnx/embed_tokens_fp16.onnx?download=true",
-        //         "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/onnx/embed_tokens_fp16.onnx_data?download=true",
-        //         "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/config.json?download=true",
-        //         "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/tokenizer.json?download=true",
-        //         "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/tokenizer_config.json?download=true"
-        //     )
-        // ),
-
-        // Ministral-3 3B Instruct Models (MistralAI GGUF)
         LLMModel(
             name = "Ministral-3 3B Instruct (Q4_K_M)",
             description = "MistralAI's 3B instruct model. Q4_K_M quantization. 32k context. Supports Vision (Requires mmproj).",
@@ -1432,19 +843,6 @@ object ModelData {
             modelFormat = "gguf"
         ),
         LLMModel(
-            name = "Ministral-3 3B Instruct (Q8_0)",
-            description = "MistralAI's 3B instruct model. Q8_0 quantization. 32k context. Supports Vision (Requires mmproj).",
-            url = "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-GGUF/resolve/main/Ministral-3-3B-Instruct-2512-Q8_0.gguf?download=true",
-            category = "multimodal",
-            sizeBytes = 3650000000L, // 3.65 GB from HuggingFace
-            source = "MistralAI",
-            supportsVision = true,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 6, recommendedRamGB = 8),
-            contextWindowSize = 262144,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
             name = "Ministral-3 3B Instruct (Vision Projector, BF16)",
             description = "Multimodal Vision Projector for Ministral-3 3B models. Specifically the BF16 variant required for image input capabilities. Download this if you want to enable Vision for Ministral models.",
             url = "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-GGUF/resolve/main/Ministral-3-3B-Instruct-2512-BF16-mmproj.gguf?download=true",
@@ -1455,155 +853,6 @@ object ModelData {
             supportsGpu = true,
             requirements = ModelRequirements(minRamGB = 1, recommendedRamGB = 2),
             contextWindowSize = 0,
-            modelFormat = "gguf"
-        ),
-
-        // Ministral-3 3B Instruct Models (ONNX) - Q4/Q4F16 (sizeBytes = sum of all downloaded files from HF)
-        LLMModel(
-            name = "Ministral-3 3B Instruct (ONNX Q4)",
-            description = "MistralAI's 3B instruction model in ONNX format. Q4 quantization - recommended for mobile. 32k context. Supports vision. Requires downloading multiple files.",
-            url = "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/decoder_model_merged_q4.onnx?download=true",
-            category = "multimodal",
-            sizeBytes = 3367933870L, // decoder_q4 + decoder_data x2 + embed_fp16 + vision_q4 + config + tokenizer (HF API)
-            source = "MistralAI",
-            supportsVision = true,
-            supportsGpu = false,
-            requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 6),
-            contextWindowSize = 32768,
-            modelFormat = "onnx",
-            additionalFiles = listOf(
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/decoder_model_merged_q4.onnx_data?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/decoder_model_merged_q4.onnx_data_1?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/embed_tokens_fp16.onnx?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/embed_tokens_fp16.onnx_data?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/vision_encoder_q4.onnx?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/vision_encoder_q4.onnx_data?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/config.json?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/tokenizer.json?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/tokenizer_config.json?download=true"
-            )
-        ),
-        LLMModel(
-            name = "Ministral-3 3B Instruct (ONNX Q4F16)",
-            description = "MistralAI's 3B instruction model in ONNX format. Q4F16 mixed precision - best quality/size balance. 32k context. Supports vision.",
-            url = "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/decoder_model_merged_q4f16.onnx?download=true",
-            category = "multimodal",
-            sizeBytes = 3007199181L, // decoder_q4f16 + decoder_data + embed_fp16 + vision_q4 + config + tokenizer (HF API)
-            source = "MistralAI",
-            supportsVision = true,
-            supportsGpu = false,
-            requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 6),
-            contextWindowSize = 32768,
-            modelFormat = "onnx",
-            additionalFiles = listOf(
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/decoder_model_merged_q4f16.onnx_data?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/embed_tokens_fp16.onnx?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/embed_tokens_fp16.onnx_data?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/vision_encoder_q4.onnx?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/onnx/vision_encoder_q4.onnx_data?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/config.json?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/tokenizer.json?download=true",
-                "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-ONNX/resolve/main/tokenizer_config.json?download=true"
-            )
-        ),
-
-        // GPT-OSS 20B Models (OpenAI GGUF - MoE, Harmony chat format)
-        LLMModel(
-            name = "GPT-OSS 20B (Q4_K_M)",
-            description = "OpenAI's open-weight MoE model (21B total params, 3.6B active). Q4_K_M quantization. 128k context. Uses Harmony chat format. Supports reasoning modes (low/medium/high).",
-            url = "https://huggingface.co/unsloth/gpt-oss-20b-GGUF/resolve/main/gpt-oss-20b-Q4_K_M.gguf?download=true",
-            category = "text",
-            sizeBytes = 11600000000L, // 11.6 GB from HuggingFace
-            source = "OpenAI",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 14, recommendedRamGB = 16),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "GPT-OSS 20B (Q5_K_M)",
-            description = "OpenAI's open-weight MoE model (21B total params, 3.6B active). Q5_K_M quantization for better quality. 128k context. Uses Harmony chat format. Supports reasoning modes.",
-            url = "https://huggingface.co/unsloth/gpt-oss-20b-GGUF/resolve/main/gpt-oss-20b-Q5_K_M.gguf?download=true",
-            category = "text",
-            sizeBytes = 11700000000L, // 11.7 GB from HuggingFace
-            source = "OpenAI",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 14, recommendedRamGB = 16),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "GPT-OSS 20B (Q6_K)",
-            description = "OpenAI's open-weight MoE model (21B total params, 3.6B active). Q6_K quantization for high quality. 128k context. Uses Harmony chat format. Supports reasoning modes.",
-            url = "https://huggingface.co/unsloth/gpt-oss-20b-GGUF/resolve/main/gpt-oss-20b-Q6_K.gguf?download=true",
-            category = "text",
-            sizeBytes = 12000000000L, // 12 GB from HuggingFace
-            source = "OpenAI",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 14, recommendedRamGB = 16),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
-            name = "GPT-OSS 20B (Q8_0)",
-            description = "OpenAI's open-weight MoE model (21B total params, 3.6B active). Q8_0 quantization - near full quality. 128k context. Uses Harmony chat format. Supports reasoning modes.",
-            url = "https://huggingface.co/unsloth/gpt-oss-20b-GGUF/resolve/main/gpt-oss-20b-Q8_0.gguf?download=true",
-            category = "text",
-            sizeBytes = 12100000000L, // 12.1 GB from HuggingFace
-            source = "OpenAI",
-            supportsVision = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 14, recommendedRamGB = 16),
-            contextWindowSize = 131072,
-            modelFormat = "gguf"
-        ),
-
-        // Gemma-3n Models (Multimodal - Text + Vision + Audio)
-        LLMModel(
-            name = "Gemma-3n E2B",
-            description = "Google Gemma-3n E2B with multimodal capabilities (text, vision, and audio). Effective 2B parameters with selective parameter activation. Supports 4k context window and multimodal input including text, images, and audio. Ready to download from HuggingFace (3.1.15GB)",
-            url = "https://huggingface.co/google/gemma-3n-E2B-it-litert-lm/resolve/73b019b63436d346f68dd9c1dbfd117eb264d888/gemma-3n-E2B-it-int4.litertlm?download=true",
-            category = "multimodal",
-            sizeBytes = 3388604416L, // 3.1.15GB (actual downloaded size)
-            source = "Google (LiteRT LM)",
-            supportsVision = true,
-            supportsAudio = true,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 4, recommendedRamGB = 6),
-            contextWindowSize = 4096,
-            modelFormat = "litertlm"
-        ),
-        LLMModel(
-            name = "Gemma-3n E4B",
-            description = "Google Gemma-3n E4B with multimodal capabilities (text, vision, and audio). Effective 4B parameters with selective parameter activation. Supports 4k context window and multimodal input including text, images, and audio. Ready to download from HuggingFace (4.33GB)",
-            url = "https://huggingface.co/google/gemma-3n-E4B-it-litert-lm/resolve/3d0179a0648381585ab337e170b7517aae8e0ce4/gemma-3n-E4B-it-int4.litertlm?download=true",
-            category = "multimodal",
-            sizeBytes = 4652318720L, // 4.33GB (actual downloaded size)
-            source = "Google (LiteRT LM)",
-            supportsVision = true,
-            supportsAudio = true,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 6, recommendedRamGB = 7),
-            contextWindowSize = 4096,
-            modelFormat = "litertlm"
-        ),
-
-        // --- Added Gemma-3 GGUF multimodal models (4B & 12B) + vision projectors ---
-        LLMModel(
-            name = "Gemma-3 4B (Q4_0, GGUF)",
-            description = "Google Gemma-3 4B quantized GGUF (Q4_0). Supports text + vision — download the Vision Projector (mmproj) to enable image input.",
-            url = "https://huggingface.co/google/gemma-3-4b-it-qat-q4_0-gguf/resolve/main/gemma-3-4b-it-q4_0.gguf?download=true",
-            category = "multimodal",
-            sizeBytes = 3155051328L, // 3,155,051,328 bytes (~3008.89 MB)
-            source = "Google",
-            supportsVision = true,
-            supportsAudio = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 6, recommendedRamGB = 8),
-            contextWindowSize = 4096,
             modelFormat = "gguf"
         ),
         LLMModel(
@@ -1620,20 +869,6 @@ object ModelData {
             modelFormat = "gguf"
         ),
         LLMModel(
-            name = "Gemma-3 12B (Q4_0, GGUF)",
-            description = "Google Gemma-3 12B quantized GGUF (Q4_0). Supports text + vision — download the Vision Projector (mmproj) to enable image input.",
-            url = "https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-gguf/resolve/main/gemma-3-12b-it-q4_0.gguf?download=true",
-            category = "multimodal",
-            sizeBytes = 8074473920L, // 8,074,473,920 bytes (~7700.42 MB)
-            source = "Google",
-            supportsVision = true,
-            supportsAudio = false,
-            supportsGpu = true,
-            requirements = ModelRequirements(minRamGB = 12, recommendedRamGB = 16),
-            contextWindowSize = 4096,
-            modelFormat = "gguf"
-        ),
-        LLMModel(
             name = "Gemma-3 12B (Vision Projector, BF16)",
             description = "Vision Projector (mmproj) required to enable image input for Gemma-3 12B. BF16 variant for accurate visual encodings.",
             url = "https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-gguf/resolve/main/mmproj-model-f16-12B.gguf?download=true",
@@ -1646,8 +881,6 @@ object ModelData {
             contextWindowSize = 0,
             modelFormat = "gguf"
         ),
-        
-        // Gecko Embedding Models - Various dimension sizes for different use cases
         LLMModel(
             name = "Gecko-110M (64D Quantized)",
             description = "Compact Gecko embedding model with 64 dimensions, quantized for minimal storage and fast inference.",
@@ -1752,8 +985,6 @@ object ModelData {
             contextWindowSize = 1024,
             modelFormat = "tflite"
         ),
-        
-        // EmbeddingGemma Models - High-quality text embeddings from Google
         LLMModel(
             name = "EmbeddingGemma 300M (256 seq)",
             description = "Google EmbeddingGemma 300M model with 256 sequence length. High-quality text embeddings for semantic search and similarity tasks. Mixed-precision for optimal performance. Ready to download from HuggingFace (170.84MB)",
@@ -1806,8 +1037,6 @@ object ModelData {
             contextWindowSize = 2048,
             modelFormat = "tflite"
         ),
-        
-        // Image Generation Models - Absolute Reality (Stable Diffusion 1.5)
         LLMModel(
             name = "Absolute Reality (NPU - ${DeviceInfo.getSdQnnPackageSuffix()})",
             description = "Absolute Reality SD1.5 model optimized for Qualcomm NPU acceleration using QNN SDK. Supports txt2img generation at 512x512 resolution. Requires Snapdragon 8 Gen 1 or newer with Hexagon NPU. Device detected: ${DeviceInfo.getDeviceSoc()}. ~1.06 GB download from HuggingFace.",
@@ -1839,8 +1068,7 @@ object ModelData {
             requirements = ModelRequirements(minRamGB = 2, recommendedRamGB = 4),
             contextWindowSize = 0,
             modelFormat = "mnn_cpu" // MNN framework for CPU inference
-        )
-        // Note: Gecko tokenizer removed - Gecko models have built-in tokenizers
+        ),
     )
 
     /**

@@ -70,7 +70,14 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
         } catch (e: Exception) {
             android.util.Log.e("UnifiedInferenceService", "Service ${currentService.javaClass.simpleName} failed to load model '${model.name}'", e)
             currentModel = null
-            throw AllBackendsFailedException("Failed to load model '${model.name}': ${e.message}")
+            val detailMsg = if (model.modelFormat == "gguf") {
+                "GGUF-Modell '${model.name}' konnte nicht geladen werden. " +
+                "Dieses Gerät (Samsung Exynos) unterstützt GGUF-Modelle möglicherweise nicht. " +
+                "Verwende stattdessen LiteRT-LM Modelle oder Groq Cloud."
+            } else {
+                "Failed to load model '${model.name}': ${e.message}"
+            }
+            throw AllBackendsFailedException(detailMsg)
         }
     }
 
@@ -123,7 +130,14 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
         } catch (e: Exception) {
             android.util.Log.e("UnifiedInferenceService", "Service ${currentService.javaClass.simpleName} failed to load model '${model.name}'", e)
             currentModel = null
-            throw AllBackendsFailedException("Failed to load model '${model.name}': ${e.message}")
+            val detailMsg = if (model.modelFormat == "gguf") {
+                "GGUF-Modell '${model.name}' konnte nicht geladen werden. " +
+                "Dieses Gerät (Samsung Exynos) unterstützt GGUF-Modelle möglicherweise nicht. " +
+                "Verwende stattdessen LiteRT-LM Modelle oder Groq Cloud."
+            } else {
+                "Failed to load model '${model.name}': ${e.message}"
+            }
+            throw AllBackendsFailedException(detailMsg)
         }
     }
 

@@ -324,6 +324,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _modelLoading.value = true
             _lastError.value = null
+            var gpuFailed = false
             try {
                 val success = inferenceService.loadModel(model, com.google.mediapipe.tasks.genai.llminference.LlmInference.Backend.GPU)
                 if (success) {
@@ -332,10 +333,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _isModelLoaded.value = true
                     _llmMode.value = "local"
                     Preferences.llmMode = "local"
-                    loadAvailableModels() // refresh download status
+                    loadAvailableModels()
                     _messages.update { it + ChatMessage(text = "✅ ${model.name} geladen! Modell ist bereit.", isUser = false) }
+                    return@launch
                 } else {
-                    // Fallback to CPU
+                    gpuFailed = true
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "GPU load failed for ${model.name}: ${e.message}")
+                gpuFailed = true
+            }
+            // Fallback to CPU
+            if (gpuFailed) {
+                try {
                     val cpuSuccess = inferenceService.loadModel(model, com.google.mediapipe.tasks.genai.llminference.LlmInference.Backend.CPU)
                     if (cpuSuccess) {
                         currentModel = model
@@ -345,21 +355,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         Preferences.llmMode = "local"
                         loadAvailableModels()
                         _messages.update { it + ChatMessage(text = "✅ ${model.name} geladen (CPU-Modus)!", isUser = false) }
-                    } else {
-                        val errorMsg = "❌ ${model.name} konnte nicht geladen werden. " +
-                            "Das Modell (${model.sizeBytes / 1_000_000} MB, ${model.modelFormat.uppercase()}) ist möglicherweise nicht kompatibel mit deinem Gerät."
-                        _lastError.value = errorMsg
-                        _messages.update { it + ChatMessage(text = errorMsg, isUser = false) }
+                        return@launch
                     }
+                } catch (e2: Exception) {
+                    Log.e(TAG, "CPU load also failed for ${model.name}: ${e2.message}")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to load model ${model.name}: ${e.message}", e)
-                val errorMsg = "❌ Fehler beim Laden von ${model.name}: ${e.message ?: "Unbekannter Fehler"}"
-                _lastError.value = errorMsg
-                _messages.update { it + ChatMessage(text = errorMsg, isUser = false) }
-            } finally {
-                _modelLoading.value = false
             }
+            // Both GPU and CPU failed
+            val errorMsg = "❌ ${model.name} konnte nicht geladen werden. " +
+                "Das Modell (${model.sizeBytes / 1_000_000} MB, ${model.modelFormat.uppercase()}) ist möglicherweise nicht kompatibel mit deinem Gerät. " +
+                "Versuche ein anderes Modell oder nutze Groq Cloud."
+            _lastError.value = errorMsg
+            _messages.update { it + ChatMessage(text = errorMsg, isUser = false) }
+            _modelLoading.value = false
         }
     }
 

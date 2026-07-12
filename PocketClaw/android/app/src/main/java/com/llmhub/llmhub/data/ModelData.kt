@@ -87,10 +87,10 @@ object ModelData {
         LLMModel(
             name = "Gemma-3 1B (INT4, 2k)",
             description = "Google Gemma-3 1B with INT4 quantization and a 2k context window. Optimized for mobile devices. Ready to download from HuggingFace (529MB)",
-            url = "https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/Gemma3-1B-IT_multi-prefill-seq_q4_ekv2048.task?download=true",
+            url = "https://huggingface.co/AfiOne/gemma3-1b-it-int4.task/resolve/main/gemma3-1b-it-int4.task?download=true",
             category = "text",
-            sizeBytes = 554661246L, // 529MB (actual size from HuggingFace)
-            source = "Google via LiteRT Community",
+            sizeBytes = 554661246L, // 529MB
+            source = "Google via AfiOne (non-gated)",
             supportsVision = false,
             supportsGpu = true,
             requirements = ModelRequirements(minRamGB = 2, recommendedRamGB = 3),
@@ -98,8 +98,8 @@ object ModelData {
             modelFormat = "task"
         ),
         LLMModel(
-            name = "Gemma-3 1B (INT8, 1.2k)",
-            description = "Higher quality INT8 version of Gemma-3 1B with a 1.2k context window. Ready to download from HuggingFace (1005MB)",
+            name = "Gemma-3 1B (INT8, 1.2k) [HF Token]",
+            description = "INT8 Gemma-3 1B, 1.2k context. Requires HF_TOKEN (gated model). 1005MB",
             url = "https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/Gemma3-1B-IT_multi-prefill-seq_q8_ekv1280.task?download=true",
             category = "text",
             sizeBytes = 1054012582L, // 1005MB (actual size from HuggingFace)
@@ -111,8 +111,8 @@ object ModelData {
             modelFormat = "task"
         ),
         LLMModel(
-            name = "Gemma-3 1B (INT8, 2k)",
-            description = "Higher quality INT8 version of Gemma-3 1B with a 2k context window. Ready to download from HuggingFace (1024MB)",
+            name = "Gemma-3 1B (INT8, 2k) [HF Token]",
+            description = "INT8 Gemma-3 1B, 2k context. Requires HF_TOKEN (gated model). 1024MB",
             url = "https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/Gemma3-1B-IT_multi-prefill-seq_q8_ekv2048.task?download=true",
             category = "text",
             sizeBytes = 1073765694L, // 1024MB (actual size from HuggingFace)
@@ -124,8 +124,8 @@ object ModelData {
             modelFormat = "task"
         ),
         LLMModel(
-            name = "Gemma-3 1B (INT8, 4k)",
-            description = "Higher quality INT8 version of Gemma-3 1B with a large 4k context window. Ready to download from HuggingFace (1005MB)",
+            name = "Gemma-3 1B (INT8, 4k) [HF Token]",
+            description = "INT8 Gemma-3 1B, 4k context. Requires HF_TOKEN (gated model). 1005MB",
             url = "https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/Gemma3-1B-IT_multi-prefill-seq_q8_ekv4096.task?download=true",
             category = "text",
             sizeBytes = 1054023846L, // 1005MB (actual size from HuggingFace)
@@ -1079,8 +1079,8 @@ object ModelData {
             modelFormat = "tflite"
         ),
         LLMModel(
-            name = "EmbeddingGemma 300M (256 seq)",
-            description = "Google EmbeddingGemma 300M model with 256 sequence length. High-quality text embeddings for semantic search and similarity tasks. Mixed-precision for optimal performance. Ready to download from HuggingFace (170.84MB)",
+            name = "EmbeddingGemma 300M (256 seq) [HF Token]",
+            description = "EmbeddingGemma 300M, 256 seq. Requires HF_TOKEN (gated model). 171MB",
             url = "https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/embeddinggemma-300M_seq256_mixed-precision.tflite?download=true",
             category = "embedding",
             sizeBytes = 179131736L, // 170.84 MB
@@ -1092,8 +1092,8 @@ object ModelData {
             modelFormat = "tflite"
         ),
         LLMModel(
-            name = "EmbeddingGemma 300M (512 seq)",
-            description = "Google EmbeddingGemma 300M model with 512 sequence length. High-quality text embeddings for semantic search and similarity tasks. Mixed-precision for optimal performance. Ready to download from HuggingFace (170.84MB)",
+            name = "EmbeddingGemma 300M (512 seq) [HF Token]",
+            description = "EmbeddingGemma 300M, 512 seq. Requires HF_TOKEN (gated model). 171MB",
             url = "https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/embeddinggemma-300M_seq512_mixed-precision.tflite?download=true",
             category = "embedding",
             sizeBytes = 179132472L, // 170.84 MB
@@ -1105,8 +1105,8 @@ object ModelData {
             modelFormat = "tflite"
         ),
         LLMModel(
-            name = "EmbeddingGemma 300M (1024 seq)",
-            description = "Google EmbeddingGemma 300M model with 1024 sequence length. High-quality text embeddings for semantic search and similarity tasks. Mixed-precision for optimal performance. Ready to download from HuggingFace (174.84MB)",
+            name = "EmbeddingGemma 300M (1024 seq) [HF Token]",
+            description = "EmbeddingGemma 300M, 1024 seq. Requires HF_TOKEN (gated model). 175MB",
             url = "https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/embeddinggemma-300M_seq1024_mixed-precision.tflite?download=true",
             category = "embedding",
             sizeBytes = 183329528L, // 174.84 MB
@@ -1118,8 +1118,8 @@ object ModelData {
             modelFormat = "tflite"
         ),
         LLMModel(
-            name = "EmbeddingGemma 300M (2048 seq)",
-            description = "Google EmbeddingGemma 300M model with 2048 sequence length. High-quality text embeddings for semantic search and similarity tasks. Mixed-precision for optimal performance. Ready to download from HuggingFace (186.84MB)",
+            name = "EmbeddingGemma 300M (2048 seq) [HF Token]",
+            description = "EmbeddingGemma 300M, 2048 seq. Requires HF_TOKEN (gated model). 187MB",
             url = "https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/embeddinggemma-300M_seq2048_mixed-precision.tflite?download=true",
             category = "embedding",
             sizeBytes = 195912440L, // 186.84 MB

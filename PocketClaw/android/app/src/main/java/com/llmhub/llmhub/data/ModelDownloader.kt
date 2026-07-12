@@ -188,15 +188,17 @@ class ModelDownloader(
                     connection.disconnect()
                     
                     // For 403 errors, try to provide diagnostic information
-                    val errorMsg = if (responseCode == 403) {
+                    val errorMsg = if (responseCode == 401 || responseCode == 403) {
+                        val accessHint = if (responseCode == 401) {
+                            "\n\nTipp: Dieses Modell ist gated. Setze HF_TOKEN in local.properties\noder akzeptiere die Lizenz auf huggingface.co"
+                        } else ""
                         try {
-                            // Try to extract repo ID from URL (format: https://huggingface.co/owner/repo/resolve/...)
                             val repoMatch = Regex("huggingface\\.co/([^/]+/[^/]+)").find(currentUrl)
                             val repoId = repoMatch?.groupValues?.get(1) ?: "unknown/repo"
                             val diagnostics = validateTokenAccess(repoId, currentUrl)
-                            "HTTP 403 Forbidden at URL $currentUrl\n\nDiagnosis:\n$diagnostics"
+                            "HTTP $responseCode at URL $currentUrl$accessHint\n\nDiagnosis:\n$diagnostics"
                         } catch (diagError: Exception) {
-                            "HTTP $responseCode at URL $currentUrl (diagnosis failed: ${diagError.message})"
+                            "HTTP $responseCode at URL $currentUrl$accessHint"
                         }
                     } else {
                         "HTTP $responseCode at URL $currentUrl"

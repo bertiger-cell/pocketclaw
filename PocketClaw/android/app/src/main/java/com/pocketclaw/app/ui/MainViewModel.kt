@@ -47,7 +47,6 @@ import kotlinx.coroutines.sync.withLock
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Ensures only one model download runs at a time (coroutines-expert pattern) */
-    private val downloadMutex = Mutex()
 
     companion object {
         private const val TAG = "MainVM"
@@ -56,6 +55,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private val app = application as PocketClawApplication
+    private val downloadVM = app.downloadViewModel
     private val inferenceService: InferenceService = app.inferenceService
     private val chatRepository: ChatRepository = app.chatRepository
     private val bondEngine: BondEngine = app.bondEngine
@@ -81,17 +81,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isRecording = MutableStateFlow(false)
     val isRecording: StateFlow<Boolean> = _isRecording.asStateFlow()
 
-    private val _isModelLoaded = MutableStateFlow(false)
-    val isModelLoaded: StateFlow<Boolean> = _isModelLoaded.asStateFlow()
+    val isModelLoaded get() = downloadVM.isModelLoaded
 
-    private val _currentModelName = MutableStateFlow("")
-    val currentModelName: StateFlow<String> = _currentModelName.asStateFlow()
+    val currentModelName get() = downloadVM.currentModelName
 
-    private val _availableModels = MutableStateFlow<List<LLMModel>>(emptyList())
-    val availableModels: StateFlow<List<LLMModel>> = _availableModels.asStateFlow()
+    val availableModels get() = downloadVM.availableModels
 
-    private val _allLocalModels = MutableStateFlow<List<LLMModel>>(emptyList())
-    val allLocalModels: StateFlow<List<LLMModel>> = _allLocalModels.asStateFlow()
+    val allLocalModels get() = downloadVM.allLocalModels
 
     private val _llmMode = MutableStateFlow(Preferences.llmMode)
     val llmMode: StateFlow<String> = _llmMode.asStateFlow()
@@ -142,15 +138,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val downloaded: Boolean = false,
         val modelId: String = "",
     )
-    private val _modelDownloads = MutableStateFlow<Map<String, ModelDownloadState>>(emptyMap())
-    val modelDownloads: StateFlow<Map<String, ModelDownloadState>> = _modelDownloads.asStateFlow()
+    val modelDownloads get() = downloadVM.modelDownloads
 
     // Animation triggers
-    private val _modelLoading = MutableStateFlow(false)
-    val modelLoading: StateFlow<Boolean> = _modelLoading.asStateFlow()
+    val modelLoading get() = downloadVM.modelLoading
 
-    private val _lastError = MutableStateFlow<String?>(null)
-    val lastError: StateFlow<String?> = _lastError.asStateFlow()
+    val lastError get() = downloadVM.lastError
 
     // Token tracking for cost awareness
     private val _totalTokensUsed = MutableStateFlow(0)
@@ -286,84 +279,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun downloadQwenModel() {
-        val modelDef = com.llmhub.llmhub.data.ModelData.models.find {
-            it.modelFormat == "litertlm" && it.name.contains("Qwen3")
+        downloadVM.downloadQwenModel { dm ->
+            loadFirstAvailableModel()
         }
-        modelDef?.let { downloadModel(it) }
     }
 
     fun downloadModel(model: LLMModel) {
-        val modelId = model.name
-        // Global lock: reject if ANY download is already running
-        if (_modelDownloads.value.any { it.value.isDownloading }) {
-            Log.w(TAG, "Download blocked: another download is already running")
-            return
-        }
-
-        viewModelScope.launch {
-            downloadMutex.withLock {
-                _modelDownloads.update { it + (modelId to ModelDownloadState(
-                    isDownloading = true, progress = 0f, modelId = modelId
-                )) }
-                _lastError.value = null
-                try {
-                    val downloader = ModelDownloader(
-                        io.ktor.client.HttpClient(), app,
-                        com.pocketclaw.app.BuildConfig.HF_TOKEN.ifBlank { null },
-                    )
-                    val downloadResult = withTimeoutOrNull(600_000L) { // 10 min timeout
-                        downloader.downloadModel(model).collect { status ->
-                            val pct = if (status.totalBytes > 0)
-                                (status.downloadedBytes.toFloat() / status.totalBytes).coerceIn(0f, 1f) else 0f
-                            _modelDownloads.update { it + (modelId to ModelDownloadState(
-                                isDownloading = true, progress = pct, modelId = modelId
-                            )) }
-                        }
-                    }
-                    if (downloadResult == null) {
-                        _lastError.value = "Download-Timeout für ${model.name} (10 Min. Limit)"
-                        _modelDownloads.update { it + (modelId to ModelDownloadState(
-                            isDownloading = false, modelId = modelId
-                        )) }
-                        return@withLock
-                    }
-                    // Verify
-                    val modelsDir = java.io.File(app.filesDir, "models")
-                    val targetFile = java.io.File(modelsDir, model.localFileName())
-                    if (targetFile.exists() && targetFile.length() > 1_000_000) {
-                        val validationError = validateDownloadedFile(targetFile, model.modelFormat)
-                        if (validationError != null) {
-                            Log.w(TAG, "Download validation failed for ${model.name}: $validationError")
-                            targetFile.delete()
-                            _lastError.value = validationError
-                            _modelDownloads.update { it + (modelId to ModelDownloadState(
-                                isDownloading = false, modelId = modelId
-                            )) }
-                            _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - $validationError", isUser = false) }
-                        } else {
-                            _modelDownloads.update { it + (modelId to ModelDownloadState(
-                                downloaded = true, modelId = modelId
-                            )) }
-                            _messages.update { it + ChatMessage(text = "${model.name} heruntergeladen! (${targetFile.length() / 1_000_000} MB) ✓", isUser = false) }
-                            loadFirstAvailableModel()
-                        }
-                    } else {
-                        val reason = if (targetFile.exists()) "Datei zu klein (${targetFile.length()} bytes)" else "Datei nicht gefunden"
-                        targetFile.delete()
-                        _lastError.value = "Download fehlgeschlagen: $reason"
-                        _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - $reason", isUser = false) }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Download failed for ${model.name}: ${e.message}", e)
-                    _lastError.value = e.message
-                    _messages.update { it + ChatMessage(text = "Download fehlgeschlagen: ${model.name} - ${e.message}", isUser = false) }
-                } finally {
-                    _modelDownloads.update { current ->
-                        current + (modelId to (current[modelId]?.copy(isDownloading = false)
-                            ?: ModelDownloadState(modelId = modelId)))
-                    }
-                }
-            }
+        downloadVM.downloadModel(model) { dm ->
+            loadFirstAvailableModel()
         }
     }
 
@@ -419,55 +342,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun deleteLocalModel(model: LLMModel) {
-        viewModelScope.launch {
-            try {
-                val modelsDir = java.io.File(app.filesDir, "models")
-                val modelFile = java.io.File(modelsDir, model.localFileName())
-                val deleted = if (modelFile.exists()) {
-                    modelFile.delete()
-                } else false
-                // Also check for model directory (some models use dirs)
-                val modelDirName = model.name.replace(" ", "_").replace(Regex("[^a-zA-Z0-9_.-]"), "")
-                val modelDir = java.io.File(modelsDir, modelDirName)
-                if (modelDir.exists() && modelDir.isDirectory) {
-                    modelDir.deleteRecursively()
-                }
-                if (deleted || modelDir.exists()) {
-                    // Update download state
-                    _modelDownloads.update { it + (model.name to ModelDownloadState(
-                        downloaded = false, modelId = model.name
-                    )) }
-                    if (currentModel?.name == model.name) {
-                        currentModel = null
-                        _isModelLoaded.value = false
-                        _currentModelName.value = "Kein Modell"
-                    }
-                    loadAvailableModels()
-                    _messages.update { it + ChatMessage(text = "🗑️ ${model.name} gelöscht.", isUser = false) }
-                } else {
-                    _messages.update { it + ChatMessage(text = "⚠️ Modell-Datei nicht gefunden.", isUser = false) }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to delete model ${model.name}: ${e.message}", e)
-                _messages.update { it + ChatMessage(text = "❌ Fehler beim Löschen: ${e.message}", isUser = false) }
-            }
+        downloadVM.deleteLocalModel(model)
+        if (currentModel?.name == model.name) {
+            currentModel = null
         }
     }
 
     fun downloadDeviceModels(models: List<LLMModel>) {
-        viewModelScope.launch {
-            val toDownload = models.filter { model ->
-                val dlState = _modelDownloads.value[model.name]
-                dlState?.downloaded != true
-            }
-            if (toDownload.isEmpty()) {
-                _messages.update { it + ChatMessage(text = "✅ Alle passenden Modelle bereits heruntergeladen.", isUser = false) }
-                return@launch
-            }
-            _messages.update { it + ChatMessage(text = "📥 Starte Download für ${toDownload.size} Modell(e)...", isUser = false) }
-            for (model in toDownload) {
-                downloadModel(model)
-            }
+        downloadVM.downloadDeviceModels(models) { dm ->
+            loadFirstAvailableModel()
         }
     }
 
@@ -966,62 +849,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * Validates a downloaded model file is a real binary, not an HTML error page.
      * Returns null if valid, or a human-readable error message.
      */
-    private fun validateDownloadedFile(file: java.io.File, modelFormat: String): String? {
-        try {
-            val header = ByteArray(512)
-            var bytesRead = 0
-            java.io.FileInputStream(file).use { fis ->
-                bytesRead = fis.read(header)
-            }
-            if (bytesRead < 4) return "Datei ist leer oder zu klein"
-            val headerStr = String(header, charset("ISO-8859-1")).trimStart(' ')
-
-            // Check if file is actually an HTML page (HuggingFace error)
-            val lowerHeader = headerStr.lowercase()
-            if (lowerHeader.startsWith("<!doctype html") || lowerHeader.startsWith("<html") ||
-                lowerHeader.contains("<title>403") || lowerHeader.contains("<title>404") ||
-                lowerHeader.contains("access denied") || lowerHeader.contains("forbidden")) {
-                return when {
-                    lowerHeader.contains("403") || lowerHeader.contains("forbidden") || lowerHeader.contains("access denied") ->
-                        "Token ungültig oder Modell erfordert HuggingFace-Lizenz. Prüfe HF_TOKEN."
-                    lowerHeader.contains("404") || lowerHeader.contains("not found") ->
-                        "Modell nicht gefunden (HTTP 404). URL könnte veraltet sein."
-                    else ->
-                        "Server liefert HTML statt Modell-Datei. Möglicherweise Token erforderlich."
-                }
-            }
-
-            // Format-specific validation
-            when (modelFormat.lowercase()) {
-                "gguf" -> {
-                    if (bytesRead >= 4) {
-                        val magic = String(header.copyOfRange(0, 4))
-                        if (magic != "GGUF") {
-                            return "Datei ist kein gültiges GGUF-Format (Magic: $magic)"
-                        }
-                    }
-                }
-                "task" -> {
-                    // .task files are ZIP archives
-                    if (bytesRead >= 2 && header[0] == 'P'.code.toByte() && header[1] == 'K'.code.toByte()) {
-                        // Valid ZIP header
-                    } else if (file.length() < 10_000_000) {
-                        return "MediaPipe .task Datei ist zu klein (${file.length() / 1_000_000} MB)"
-                    }
-                }
-                "litertlm" -> {
-                    if (file.length() < 10_000_000) {
-                        return "LiteRT-LM Datei ist zu klein (${file.length() / 1_000_000} MB)"
-                    }
-                }
-            }
-
-            return null // Valid
-        } catch (e: Exception) {
-            Log.w(TAG, "File validation error: ${e.message}")
-            return "Validierungsfehler: ${e.message}"
-        }
-    }
 
     private fun showToast(msg: String) {
         Toast.makeText(getApplication(), msg, Toast.LENGTH_SHORT).show()

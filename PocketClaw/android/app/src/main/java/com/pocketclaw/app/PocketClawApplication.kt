@@ -44,6 +44,7 @@ class PocketClawApplication : Application() {
     }
     val permissionGuard by lazy { PermissionGuard() }
     val auditLog by lazy { AuditLog() }
+    val downloadViewModel by lazy { DownloadViewModel(this) }
     val toolExecutor by lazy { ToolExecutor(this, permissionGuard, auditLog) }
 
     private var _inferenceService: InferenceService? = null

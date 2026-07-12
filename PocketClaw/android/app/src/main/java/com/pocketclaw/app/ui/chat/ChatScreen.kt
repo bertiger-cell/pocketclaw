@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.PhoneAndroid
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -141,21 +142,37 @@ fun ChatScreen(
                 availableModels.forEach { model ->
                     DropdownMenuItem(
                         text = {
-                            Column {
-                                Text(
-                                    text = model.name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (model.name == currentModelName) FontWeight.Bold else FontWeight.Normal
-                                )
-                                Text(
-                                    text = when (model.modelFormat) {
-                                        "groq" -> "☁️ Cloud (Groq)"
-                                        "litertlm" -> "📱 Lokal (LiteRT-LM)"
-                                        else -> "📱 Lokal (${model.modelFormat})"
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = when (model.modelFormat) {
+                                        "groq" -> Icons.Default.Cloud
+                                        "litertlm" -> Icons.Default.PhoneAndroid
+                                        else -> Icons.Default.SmartToy
                                     },
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colors.textSecondary
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = if (model.name == currentModelName) CrabOrange else colors.textMuted,
                                 )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = model.name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (model.name == currentModelName) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (model.name == currentModelName) CrabOrange else colors.textPrimary,
+                                    )
+                                    Text(
+                                        text = when (model.modelFormat) {
+                                            "groq" -> "☁️ Groq Cloud"
+                                            "litertlm" -> "📱 LiteRT-LM"
+                                            "gguf" -> "📱 GGUF (Nexa)"
+                                            "task" -> "📱 MediaPipe"
+                                            else -> "📱 ${model.modelFormat}"
+                                        },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = colors.textSecondary,
+                                    )
+                                }
                             }
                         },
                         onClick = {

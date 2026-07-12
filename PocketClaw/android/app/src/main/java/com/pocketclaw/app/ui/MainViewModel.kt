@@ -371,6 +371,42 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun deleteLocalModel(model: LLMModel) {
+        viewModelScope.launch {
+            try {
+                val modelsDir = java.io.File(app.filesDir, "models")
+                val modelFile = java.io.File(modelsDir, model.localFileName())
+                val deleted = if (modelFile.exists()) {
+                    modelFile.delete()
+                } else false
+                // Also check for model directory (some models use dirs)
+                val modelDirName = model.name.replace(" ", "_").replace(Regex("[^a-zA-Z0-9_.-]"), "")
+                val modelDir = java.io.File(modelsDir, modelDirName)
+                if (modelDir.exists() && modelDir.isDirectory) {
+                    modelDir.deleteRecursively()
+                }
+                if (deleted || modelDir.exists()) {
+                    // Update download state
+                    _modelDownloads.value = _modelDownloads.value + (model.name to ModelDownloadState(
+                        downloaded = false, modelId = model.name
+                    ))
+                    if (currentModel?.name == model.name) {
+                        currentModel = null
+                        _isModelLoaded.value = false
+                        _currentModelName.value = "Kein Modell"
+                    }
+                    loadAvailableModels()
+                    _messages.update { it + ChatMessage(text = "🗑️ ${model.name} gelöscht.", isUser = false) }
+                } else {
+                    _messages.update { it + ChatMessage(text = "⚠️ Modell-Datei nicht gefunden.", isUser = false) }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to delete model ${model.name}: ${e.message}", e)
+                _messages.update { it + ChatMessage(text = "❌ Fehler beim Löschen: ${e.message}", isUser = false) }
+            }
+        }
+    }
+
     fun installSkill(skill: CustomSkill) {
         viewModelScope.launch {
             try {

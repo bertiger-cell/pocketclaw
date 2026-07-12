@@ -60,6 +60,7 @@ fun SettingsScreen(
     lastError: String? = null,
     onDownloadModel: (com.llmhub.llmhub.data.LLMModel) -> Unit = {},
     onLoadLocalModel: (com.llmhub.llmhub.data.LLMModel) -> Unit = {},
+    onDeleteModel: (com.llmhub.llmhub.data.LLMModel) -> Unit = {},
 ) {
     var sttEnabled by remember { mutableStateOf(Preferences.sttEnabled) }
     var ttsEnabled by remember { mutableStateOf(Preferences.ttsEnabled) }
@@ -300,28 +301,56 @@ fun SettingsScreen(
                                                 )
                                             }
                                             Spacer(modifier = Modifier.width(6.dp))
-                                            // Description
-                                            Text(
-                                                model.description.take(40) + "...",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = colors.textMuted,
-                                                maxLines = 1,
-                                            )
+                                            // Description + device compat
+                                            Column {
+                                                Text(
+                                                    model.description.take(40) + "...",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = colors.textMuted,
+                                                    maxLines = 1,
+                                                )
+                                                // Device compatibility tag
+                                                val deviceCompat = when {
+                                                    model.modelFormat == "litertlm" -> "✓ Alle Geräte (inkl. Exynos)"
+                                                    model.modelFormat == "task" -> "✓ Alle Geräte (MediaPipe)"
+                                                    model.modelFormat == "gguf" -> "⚠ Snapdragon empfohlen (Nexa)"
+                                                    model.modelFormat == "onnx" -> "✓ Alle Geräte (ONNX)"
+                                                    else -> ""
+                                                }
+                                                if (deviceCompat.isNotEmpty()) {
+                                                    Text(
+                                                        deviceCompat,
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = if (model.modelFormat == "gguf") AccentYellow else AccentGreen,
+                                                        modifier = Modifier.padding(top = 2.dp),
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
-                                    // Action button
+                                    // Action buttons
                                     if (!isDownloading) {
-                                        TextButton(
-                                            onClick = {
-                                                if (isDownloaded) onLoadLocalModel(model)
-                                                else onDownloadModel(model)
+                                        Row {
+                                            if (isDownloaded) {
+                                                TextButton(
+                                                    onClick = { onLoadLocalModel(model) }
+                                                ) {
+                                                    Text("Laden", color = AccentGreen, fontWeight = FontWeight.Bold)
+                                                }
+                                                TextButton(
+                                                    onClick = { onDeleteModel(model) }
+                                                ) {
+                                                    Icon(Icons.Default.Delete, null, tint = AccentRed, modifier = Modifier.size(16.dp))
+                                                    Spacer(modifier = Modifier.width(2.dp))
+                                                    Text("Löschen", color = AccentRed)
+                                                }
+                                            } else {
+                                                TextButton(
+                                                    onClick = { onDownloadModel(model) }
+                                                ) {
+                                                    Text("Download", color = CrabOrange, fontWeight = FontWeight.Bold)
+                                                }
                                             }
-                                        ) {
-                                            Text(
-                                                if (isDownloaded) "Laden" else "Download",
-                                                color = if (isDownloaded) AccentGreen else CrabOrange,
-                                                fontWeight = FontWeight.Bold,
-                                            )
                                         }
                                     }
                                 }

@@ -136,6 +136,7 @@ class MainActivity : ComponentActivity() {
                         lastError = viewModel.lastError.collectAsState().value,
                         onDownloadModel = viewModel::downloadModel,
                         onLoadLocalModel = viewModel::loadLocalModel,
+                        onDeleteModel = viewModel::deleteLocalModel,
                     )
                 }
             }

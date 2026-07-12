@@ -793,7 +793,7 @@ object ModelData {
             contextWindowSize = 0,
             modelFormat = "gguf"
         ),
-        LLMModel(
+        // LLMModel(
         //     name = "LFM-2.5 VL 1.6B (ONNX Q4)",
         //     description = "LiquidAI's 1.6B vision-language model in ONNX format. Q4 quantization. Supports vision + text. Requires multiple files.",
         //     url = "https://huggingface.co/LiquidAI/LFM2.5-VL-1.6B-ONNX/resolve/main/onnx/decoder_q4.onnx?download=true",

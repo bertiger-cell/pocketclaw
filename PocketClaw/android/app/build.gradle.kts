@@ -28,6 +28,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val hfToken: String = localProperties.getProperty("HF_TOKEN", "")
         buildConfigField("String", "HF_TOKEN", "\"$hfToken\"")
+        val dashscopeKey: String = localProperties.getProperty("DASHSCOPE_API_KEY", "")
+        buildConfigField("String", "DASHSCOPE_API_KEY", "\"$dashscopeKey\"")
 
         ndk {
             abiFilters += setOf("arm64-v8a")

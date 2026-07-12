@@ -10,7 +10,7 @@ object Preferences {
     private const val PREF_NAME = "pocketclaw_prefs"
     private lateinit var prefs: SharedPreferences
 
-    private const val DEFAULT_DS_KEY = "sk-" + "sp-4aec528a" + "1012492fb8" + "a1c995d063" + "7d18"
+
 
     /** Compose-observable theme state — changes trigger recomposition in PocketClawTheme */
     var themeModeState = mutableStateOf("dark")
@@ -19,8 +19,15 @@ object Preferences {
     fun init(context: Context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         themeModeState.value = prefs.getString("theme_mode", "dark") ?: "dark"
+        // Use BuildConfig key as fallback if user hasn't set one in Settings
         if (dashScopeApiKey.isBlank()) {
-            dashScopeApiKey = DEFAULT_DS_KEY
+            val buildConfigKey = try {
+                val clazz = Class.forName("com.pocketclaw.app.BuildConfig")
+                clazz.getField("DASHSCOPE_API_KEY").get(null) as? String ?: ""
+            } catch (_: Exception) { "" }
+            if (buildConfigKey.isNotBlank()) {
+                dashScopeApiKey = buildConfigKey
+            }
         }
         if (llmMode == "local" && dashScopeApiKey.isNotBlank()) {
             val existing = prefs.getString("llm_mode", null)

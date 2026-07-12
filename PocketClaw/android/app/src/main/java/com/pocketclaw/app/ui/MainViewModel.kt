@@ -956,10 +956,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun validateDownloadedFile(file: java.io.File, modelFormat: String): String? {
         try {
             val header = ByteArray(512)
+            var bytesRead = 0
             java.io.FileInputStream(file).use { fis ->
-                val read = fis.read(header)
-                if (read < 4) return "Datei ist leer oder zu klein"
+                bytesRead = fis.read(header)
             }
+            if (bytesRead < 4) return "Datei ist leer oder zu klein"
             val headerStr = String(header, charset("ISO-8859-1")).trimStart(' ')
 
             // Check if file is actually an HTML page (HuggingFace error)
@@ -980,8 +981,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // Format-specific validation
             when (modelFormat.lowercase()) {
                 "gguf" -> {
-                    if (read >= 4) {
-                        val magic = String(header.sliceArray(0, 4))
+                    if (bytesRead >= 4) {
+                        val magic = String(header.copyOfRange(0, 4))
                         if (magic != "GGUF") {
                             return "Datei ist kein gültiges GGUF-Format (Magic: $magic)"
                         }
@@ -989,7 +990,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 "task" -> {
                     // .task files are ZIP archives
-                    if (read >= 2 && header[0] == 'P'.code.toByte() && header[1] == 'K'.code.toByte()) {
+                    if (bytesRead >= 2 && header[0] == 'P'.code.toByte() && header[1] == 'K'.code.toByte()) {
                         // Valid ZIP header
                     } else if (file.length() < 10_000_000) {
                         return "MediaPipe .task Datei ist zu klein (${file.length() / 1_000_000} MB)"

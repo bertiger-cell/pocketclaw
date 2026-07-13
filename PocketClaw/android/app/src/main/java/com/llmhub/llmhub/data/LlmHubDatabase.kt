@@ -14,6 +14,8 @@ import com.pocketclaw.claw.skills.CustomSkill
 import com.pocketclaw.claw.skills.CustomSkillDao
 import com.pocketclaw.app.data.ScheduledTask
 import com.pocketclaw.app.data.ScheduledTaskDao
+import com.pocketclaw.app.data.WorkspaceProject
+import com.pocketclaw.app.data.WorkspaceDao
 
 @Database(
     entities = [
@@ -26,8 +28,9 @@ import com.pocketclaw.app.data.ScheduledTaskDao
         BondGrowth::class,
         CustomSkill::class,
         ScheduledTask::class,
+        WorkspaceProject::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class LlmHubDatabase : RoomDatabase() {
@@ -40,6 +43,7 @@ abstract class LlmHubDatabase : RoomDatabase() {
     abstract fun bondGrowthDao(): BondGrowthDao
     abstract fun customSkillDao(): CustomSkillDao
     abstract fun scheduledTaskDao(): ScheduledTaskDao
+    abstract fun workspaceDao(): WorkspaceDao
     
     companion object {
         @Volatile
@@ -99,6 +103,15 @@ abstract class LlmHubDatabase : RoomDatabase() {
             }
         }
         
+
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `workspace_projects` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `localFolderPath` TEXT NOT NULL, `boundSkillIds` TEXT NOT NULL, `projectInstructions` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`))"
+                )
+            }
+        }
+
         fun getDatabase(context: Context): LlmHubDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -106,7 +119,7 @@ abstract class LlmHubDatabase : RoomDatabase() {
                     LlmHubDatabase::class.java,
                     "llmhub_database"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance

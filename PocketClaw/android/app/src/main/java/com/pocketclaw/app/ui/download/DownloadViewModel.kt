@@ -207,6 +207,32 @@ class DownloadViewModel(application: Application) : AndroidViewModel(application
         modelDef?.let { downloadModel(it, onDownloaded) }
     }
 
+    // -- State Setters (called by MainViewModel) ------------------------------------------------
+
+    fun setCurrentModelName(name: String) {
+        _currentModelName.value = name
+    }
+
+    fun setModelLoaded(loaded: Boolean) {
+        _isModelLoaded.value = loaded
+    }
+
+    fun setModelLoading(loading: Boolean) {
+        _modelLoading.value = loading
+    }
+
+    fun setLastError(error: String?) {
+        _lastError.value = error
+    }
+
+    fun updateAvailableModels(models: List<com.llmhub.llmhub.data.LLMModel>) {
+        _availableModels.value = models
+    }
+
+    fun updateAllLocalModels(models: List<com.llmhub.llmhub.data.LLMModel>) {
+        _allLocalModels.value = models
+    }
+
     // -- File Validation ------------------------------------------------
 
     private fun validateDownloadedFile(file: java.io.File, modelFormat: String): String? {

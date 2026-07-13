@@ -17,7 +17,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
     private val onnxService = OnnxInferenceService(context)
     private val nexaService = NexaInferenceService(context)
     private val liteRTLMService = LiteRTLMInferenceService(context)
-    val groqService = GroqInferenceService(context)
+    // GroqInferenceService removed — cloud backends now use CloudInferenceProvider (OpenRouter/Ollama)
 
     /** Whether the Nexa backend (for GGUF models) is usable on this device. */
     fun isNexaAvailable(): Boolean =
@@ -35,7 +35,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
             "onnx" -> onnxService
             "gguf" -> nexaService
             "litertlm" -> liteRTLMService
-            "groq" -> groqService
+            // "groq" format removed — cloud inference now uses CloudInferenceProvider
             else -> mediaPipeService
         }
 
@@ -73,7 +73,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
             val detailMsg = if (model.modelFormat == "gguf") {
                 "GGUF-Modell '${model.name}' konnte nicht geladen werden. " +
                 "Dieses Gerät (Samsung Exynos) unterstützt GGUF-Modelle möglicherweise nicht. " +
-                "Verwende stattdessen LiteRT-LM Modelle oder Groq Cloud."
+                "Verwende stattdessen LiteRT-LM Modelle oder OpenRouter."
             } else {
                 "Failed to load model '${model.name}': ${e.message}"
             }
@@ -95,7 +95,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
             "onnx" -> onnxService
             "gguf" -> nexaService
             "litertlm" -> liteRTLMService
-            "groq" -> groqService
+            // "groq" format removed — cloud inference now uses CloudInferenceProvider
             else -> mediaPipeService
         }
 
@@ -133,7 +133,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
             val detailMsg = if (model.modelFormat == "gguf") {
                 "GGUF-Modell '${model.name}' konnte nicht geladen werden. " +
                 "Dieses Gerät (Samsung Exynos) unterstützt GGUF-Modelle möglicherweise nicht. " +
-                "Verwende stattdessen LiteRT-LM Modelle oder Groq Cloud."
+                "Verwende stattdessen LiteRT-LM Modelle oder OpenRouter."
             } else {
                 "Failed to load model '${model.name}': ${e.message}"
             }
@@ -199,7 +199,6 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
         mediaPipeService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
         onnxService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
         liteRTLMService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
-        groqService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
         if (isNexaAvailable()) {
             nexaService.setGenerationParameters(maxTokens, topK, topP, temperature, nGpuLayers, enableThinking)
         }
@@ -222,7 +221,7 @@ class UnifiedInferenceService(private val context: Context) : InferenceService {
             "onnx" -> onnxService.getEffectiveMaxTokens(model)
             "gguf" -> if (isNexaAvailable()) nexaService.getEffectiveMaxTokens(model) else mediaPipeService.getEffectiveMaxTokens(model)
             "litertlm" -> liteRTLMService.getEffectiveMaxTokens(model)
-            "groq" -> groqService.getEffectiveMaxTokens(model)
+            // "groq" format removed — cloud inference now uses CloudInferenceProvider.getEffectiveMaxTokens(model)
             else -> mediaPipeService.getEffectiveMaxTokens(model)
         }
     }

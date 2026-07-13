@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.pocketclaw.app.data.Preferences
 import com.pocketclaw.app.ui.MainViewModel
 import com.pocketclaw.app.ui.chat.ChatScreen
 import com.pocketclaw.app.ui.components.ToolConfirmDialog
@@ -126,10 +127,21 @@ class MainActivity : ComponentActivity() {
                         qwenDownloading = viewModel.qwenDownloading.collectAsState().value,
                         qwenProgress = viewModel.qwenProgress.collectAsState().value,
                         onDownloadQwen = viewModel::downloadQwenModel,
-                        onSwitchToGroq = viewModel::switchToGroq,
-                        onSetGroqApiKey = viewModel::setGroqApiKey,
-                        onSetGroqModel = viewModel::setGroqModel,
-                        selectedGroqModel = viewModel.selectedGroqModel.collectAsState().value,
+                        onSetOpenRouterApiKey = viewModel::setOpenRouterApiKey,
+                        onSetOpenRouterModel = viewModel::setOpenRouterModel,
+                        selectedOpenRouterModel = viewModel.selectedOpenRouterModel.collectAsState().value,
+                        ollamaHost = viewModel.ollamaHost.collectAsState().value,
+                        onSetOllamaHost = viewModel::setOllamaHost,
+                        onSetOllamaModel = viewModel::setOllamaModel,
+                        ollamaModels = viewModel.ollamaModels.collectAsState().value,
+                        ollamaConnected = viewModel.ollamaConnected.collectAsState().value,
+                        openCodeZenApiKey = Preferences.openCodeZenApiKey,
+                        onSetOpenCodeZenApiKey = viewModel::setOpenCodeZenApiKey,
+                        openCodeZenEndpoint = viewModel.openCodeZenEndpoint.collectAsState().value,
+                        onSetOpenCodeZenEndpoint = viewModel::setOpenCodeZenEndpoint,
+                        openCodeZenModel = viewModel.selectedOpenCodeZenModel.collectAsState().value,
+                        onSetOpenCodeZenModel = viewModel::setOpenCodeZenModel,
+                        openCodeZenConnected = viewModel.openCodeZenConnected.collectAsState().value,
                         localModels = viewModel.allLocalModels.collectAsState().value,
                         modelDownloads = viewModel.modelDownloads.collectAsState().value,
                         modelLoading = viewModel.modelLoading.collectAsState().value,
@@ -138,6 +150,27 @@ class MainActivity : ComponentActivity() {
                         onLoadLocalModel = viewModel::loadLocalModel,
                         onDeleteModel = viewModel::deleteLocalModel,
                         onDownloadDeviceModels = viewModel::downloadDeviceModels,
+                        selectedDeviceProfile = viewModel.selectedDeviceProfile.collectAsState().value,
+                        filteredModels = viewModel.filteredModels.collectAsState().value,
+                        onSelectDeviceProfile = viewModel::selectDeviceProfile,
+                        // -- Personalization --
+                        userPreferredName = viewModel.userPreferredName.collectAsState().value,
+                        onSetUserPreferredName = viewModel::setUserPreferredName,
+                        userDataContext = viewModel.userDataContext.collectAsState().value,
+                        onSetUserDataContext = viewModel::setUserDataContext,
+                        agentResponseStyle = viewModel.agentResponseStyle.collectAsState().value,
+                        onSetAgentResponseStyle = viewModel::setAgentResponseStyle,
+                        agentCustomBehaviorInstructions = viewModel.agentCustomBehaviorInstructions.collectAsState().value,
+                        onSetAgentCustomBehaviorInstructions = viewModel::setAgentCustomBehaviorInstructions,
+                        // -- Workspaces --
+                        workspaceProjects = viewModel.workspaceProjects.collectAsState().value,
+                        onCreateWorkspace = viewModel::createWorkspace,
+                        onDeleteWorkspace = viewModel::deleteWorkspace,
+                        onUpdateWorkspace = viewModel::updateWorkspace,
+                        activeWorkspace = viewModel.activeWorkspace.collectAsState().value,
+                        onSetActiveWorkspace = viewModel::setActiveWorkspace,
+                        workspaceError = viewModel.workspaceError.collectAsState().value,
+                        onClearWorkspaceError = viewModel::clearWorkspaceError,
                     )
                 }
             }

@@ -11,6 +11,11 @@ import com.llmhub.llmhub.inference.InferenceService
 import com.llmhub.llmhub.inference.UnifiedInferenceService
 import com.llmhub.llmhub.repository.ChatRepository
 import com.pocketclaw.app.data.Preferences
+import com.pocketclaw.app.data.WorkspaceDao
+import com.pocketclaw.app.ui.chat.ChatViewModel
+import com.pocketclaw.app.ui.voice.VoiceViewModel
+import com.pocketclaw.app.ui.memory.BondViewModel
+import com.pocketclaw.app.ui.settings.SettingsViewModel
 import com.pocketclaw.app.messaging.*
 import com.pocketclaw.app.service.TaskWorker
 import com.pocketclaw.claw.bond.BondEngine
@@ -20,7 +25,10 @@ import com.pocketclaw.claw.prompt.UserProfile
 import com.pocketclaw.claw.security.AuditLog
 import com.pocketclaw.claw.security.PermissionGuard
 import com.pocketclaw.claw.tools.*
-import com.pocketclaw.app.api.DashScopeProvider
+import com.pocketclaw.app.api.CloudInferenceProvider
+import com.pocketclaw.app.api.OllamaProvider
+import com.pocketclaw.app.api.OpenCodeZenProvider
+import com.pocketclaw.app.api.OpenRouterProvider
 import kotlinx.coroutines.*
 import java.util.concurrent.TimeUnit
 
@@ -42,10 +50,18 @@ class PocketClawApplication : Application() {
     val bondEngine by lazy {
         BondEngine(database.bondMemoryDao(), database.bondGrowthDao())
     }
+    val workspaceDao: WorkspaceDao by lazy { database.workspaceDao() }
     val permissionGuard by lazy { PermissionGuard() }
     val auditLog by lazy { AuditLog() }
     val downloadViewModel by lazy { DownloadViewModel(this) }
+    val chatViewModel by lazy { ChatViewModel(this) }
+    val voiceViewModel by lazy { VoiceViewModel(this) }
+    val bondViewModel by lazy { BondViewModel(this, voiceViewModel.audioState) }
+    val settingsViewModel by lazy { SettingsViewModel(this) }
     val toolExecutor by lazy { ToolExecutor(this, permissionGuard, auditLog) }
+    val openRouterProvider by lazy { OpenRouterProvider }
+    val ollamaProvider by lazy { OllamaProvider }
+    val openCodeZenProvider by lazy { OpenCodeZenProvider }
 
     private var _inferenceService: InferenceService? = null
     val inferenceService: InferenceService
@@ -113,7 +129,11 @@ class PocketClawApplication : Application() {
             )
 
             val sb = StringBuilder()
-            DashScopeProvider.generateStream(assembled).collect { chunk ->
+            val provider: CloudInferenceProvider = when (Preferences.llmMode) {
+                "ollama" -> OllamaProvider
+                else -> OpenRouterProvider
+            }
+            provider.generateStream(assembled).collect { chunk ->
                 sb.append(chunk)
             }
             val raw = sb.toString()

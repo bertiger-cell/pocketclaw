@@ -1,5 +1,14 @@
 name: Build Android APK
 
+# ── Security: minimal permissions (gha-security-review) ──────────
+permissions:
+  contents: read
+
+# ── Concurrency: cancel superseded runs for same branch/PR ───────
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ main ]
@@ -10,6 +19,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -36,6 +46,11 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x PocketClaw/android/gradlew
+
+      # ── Unit Tests (fail-fast: stops build on test errors) ──────
+      - name: Run Unit Tests
+        working-directory: PocketClaw/android
+        run: ./gradlew testDebugUnitTest --no-daemon --parallel --build-cache
 
       - name: Run Lint
         working-directory: PocketClaw/android

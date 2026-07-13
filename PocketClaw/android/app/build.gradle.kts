@@ -28,8 +28,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val hfToken: String = localProperties.getProperty("HF_TOKEN", "")
         buildConfigField("String", "HF_TOKEN", "\"$hfToken\"")
-        val dashscopeKey: String = localProperties.getProperty("DASHSCOPE_API_KEY", "")
-        buildConfigField("String", "DASHSCOPE_API_KEY", "\"$dashscopeKey\"")
+        val openrouterKey: String = localProperties.getProperty("OPENROUTER_API_KEY", "")
+        buildConfigField("String", "OPENROUTER_API_KEY", "\"$openrouterKey\"")
 
         ndk {
             abiFilters += setOf("arm64-v8a")
@@ -49,6 +49,10 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -182,6 +186,8 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

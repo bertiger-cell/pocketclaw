@@ -1,5 +1,6 @@
 package com.pocketclaw.claw.prompt
 
+import com.pocketclaw.app.data.Preferences
 import com.pocketclaw.claw.bond.GrowthSystem
 import com.pocketclaw.claw.bond.BondGrowth
 
@@ -34,6 +35,33 @@ object PromptAssembler {
         val systemPrompt = buildString {
             val soul = SOUL.build()
             append(soul.take(budget.systemChars))
+
+            // ── Personalization injection ──
+            val userName = Preferences.userPreferredName
+            val userData = Preferences.userDataContext
+            val responseStyle = Preferences.agentResponseStyle
+            val customInstructions = Preferences.agentCustomBehaviorInstructions
+
+            if (userName.isNotBlank() && userName != "User") {
+                append("\n\nDer Benutzer heißt $userName. Sprich ihn immer mit seinem Namen an.")
+            }
+            if (userData.isNotBlank()) {
+                append("\n\nWichtige Informationen ueber den Benutzer:\n$userData")
+            }
+            if (responseStyle.isNotBlank() && responseStyle != "Standard") {
+                val styleDirective = when (responseStyle) {
+                    "Praegnant" -> "Antworte immer kurz, praegnant und direkt. Keine Fuellaeppelei. Maximal 2-3 Saetze pro Antwort."
+                    "Sokratisch" -> "Stelle dem Benutzer Gegenfragen anstatt direkte Antworten zu geben. Fuehre ihn durch Fragestellung zur Erkenntnis."
+                    "Formell" -> "Verwende stets formelle Anrede und gehobene Sprache. Keine Umgangssprache, keine Emojis."
+                    else -> ""
+                }
+                if (styleDirective.isNotBlank()) {
+                    append("\n\nAntwortstil: $styleDirective")
+                }
+            }
+            if (customInstructions.isNotBlank()) {
+                append("\n\nSpezielle Anweisungen des Benutzers:\n$customInstructions")
+            }
 
             val profile = UserProfile.build(memories, maxTokenBudget = budget.profileChars / 2)
             if (profile.isNotBlank()) {

@@ -82,7 +82,7 @@ pocketclaw-deck.html
 pocketclaw-deck-standalone.html
 
 # Legacy directories (kept locally, not in public repo)
-android/
+/android/
 cloud/
 assets/hero.png
 PocketClaw/android/assets/screenshots/

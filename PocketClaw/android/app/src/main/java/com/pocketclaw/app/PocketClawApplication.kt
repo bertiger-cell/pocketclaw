@@ -12,6 +12,7 @@ import com.llmhub.llmhub.inference.UnifiedInferenceService
 import com.llmhub.llmhub.repository.ChatRepository
 import com.pocketclaw.app.data.Preferences
 import com.pocketclaw.app.data.WorkspaceDao
+import com.pocketclaw.app.ui.download.DownloadViewModel
 import com.pocketclaw.app.ui.chat.ChatViewModel
 import com.pocketclaw.app.ui.voice.VoiceViewModel
 import com.pocketclaw.app.ui.memory.BondViewModel

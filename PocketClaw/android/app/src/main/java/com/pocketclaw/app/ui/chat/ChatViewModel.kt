@@ -109,6 +109,19 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+    private fun initializeChat() {
+        viewModelScope.launch {
+            try {
+                val chatId = withContext(Dispatchers.IO) {
+                    chatRepository.createNewChat("PocketClaw Chat", currentModel?.name ?: "cloud")
+                }
+                currentChatId = chatId
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to create chat: ${e.message}")
+            }
+        }
+    }
+
 
     // -- Backend Release (Memory Leak Protection) ------------------------------------------------
 

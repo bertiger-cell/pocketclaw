@@ -11,6 +11,7 @@ import com.pocketclaw.claw.bond.BondGrowth
 import com.pocketclaw.claw.bond.BondMemory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map

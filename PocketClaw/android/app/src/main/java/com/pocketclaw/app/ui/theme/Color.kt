@@ -50,6 +50,8 @@ object AppColors {
         if (LocalDarkTheme.current) DarkSurface else LightSurface
 }
 
+typealias ColorPalette = AppColors
+
 // Legacy aliases (still used in some screens)
 val SurfaceDark = DarkSurface
 val SurfaceCard = DarkCard

@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -1115,7 +1116,7 @@ fun SettingsSection(title: String, colors: ColorPalette, content: @Composable Co
 }
 
 @Composable
-private fun SettingsItem(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit, colors: ColorPalette) {
+fun SettingsItem(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit, colors: ColorPalette) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -1131,7 +1132,7 @@ private fun SettingsItem(icon: ImageVector, title: String, subtitle: String, onC
 }
 
 @Composable
-private fun SettingsToggle(icon: ImageVector, title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, colors: ColorPalette) {
+fun SettingsToggle(icon: ImageVector, title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, colors: ColorPalette) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,

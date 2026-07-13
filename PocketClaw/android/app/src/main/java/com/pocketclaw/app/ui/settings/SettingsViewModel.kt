@@ -484,4 +484,4 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
 /** Converts a string into a safe directory name: spaces→underscores, strips unsafe chars. */
 private fun String.sanitizeForFolder(): String =
-    replace(Regex("[^a-zA-Z0-9._\-]"), "_").trim('_').ifBlank { "untitled" }
+    replace(Regex("[^a-zA-Z0-9._\\-]"), "_").trim('_').ifBlank { "untitled" }

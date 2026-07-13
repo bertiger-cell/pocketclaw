@@ -5,6 +5,7 @@ import com.pocketclaw.app.data.Preferences
 import com.pocketclaw.claw.prompt.PromptAssembler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient

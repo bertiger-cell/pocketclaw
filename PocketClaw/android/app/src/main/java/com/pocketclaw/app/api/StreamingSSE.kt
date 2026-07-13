@@ -51,11 +51,10 @@ object StreamingSSE {
             }
 
             reader.use { r ->
-                r.lineSequence().forEach { line ->
-                    if (!line.startsWith("data: ")) return@forEach
+                for (line in r.lineSequence()) {
+                    if (!line.startsWith("data: ")) continue
                     val data = line.removePrefix("data: ").trim()
-                    if (data == "[DONE]") return@lineSequence
-
+                    if (data == "[DONE]") break
                     val content = parseDeltaContent(data)
                     if (content != null) {
                         emit(content)

@@ -8,6 +8,7 @@ import com.pocketclaw.app.PocketClawApplication
 import com.pocketclaw.claw.security.AuditLog
 import com.pocketclaw.claw.skills.CustomSkillDao
 import com.pocketclaw.app.data.ScheduledTaskDao
+import com.pocketclaw.app.data.WorkspaceDao
 import com.pocketclaw.app.ui.download.DownloadViewModel
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
@@ -73,6 +74,7 @@ class SettingsUiFilterTest {
             every { database } returns mockk(relaxed = true) {
                 every { customSkillDao() } returns mockk<CustomSkillDao>(relaxed = true)
                 every { scheduledTaskDao() } returns mockk<ScheduledTaskDao>(relaxed = true)
+                every { workspaceDao() } returns mockk<WorkspaceDao>(relaxed = true)
             }
             every { auditLog } returns AuditLog()
         }

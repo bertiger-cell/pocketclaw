@@ -6,6 +6,7 @@ import com.pocketclaw.app.ui.memory.BondViewModel
 import com.pocketclaw.claw.bond.BondEngine
 import com.pocketclaw.claw.bond.BondGrowthDao
 import com.pocketclaw.claw.bond.BondMemory
+import com.pocketclaw.app.data.WorkspaceDao
 import com.pocketclaw.claw.bond.BondMemoryDao
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
@@ -54,6 +55,7 @@ class VoiceAndBondIntegrationTest {
         val mockDatabase = mockk<LlmHubDatabase>(relaxed = true) {
             every { bondMemoryDao() } returns mockBondMemoryDao
             every { bondGrowthDao() } returns mockk<BondGrowthDao>(relaxed = true)
+            every { workspaceDao() } returns mockk<WorkspaceDao>(relaxed = true)
         }
 
         mockApp = mockk(relaxed = true) {

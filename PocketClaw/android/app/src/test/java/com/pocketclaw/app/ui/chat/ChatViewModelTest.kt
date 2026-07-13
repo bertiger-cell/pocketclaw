@@ -10,6 +10,7 @@ import com.pocketclaw.claw.bond.BondGrowthDao
 import com.pocketclaw.claw.tools.ToolExecutor
 import com.pocketclaw.claw.tools.ToolParser
 import com.pocketclaw.claw.tools.ToolRegistry
+import com.pocketclaw.app.data.WorkspaceDao
 import com.pocketclaw.claw.tools.ToolResult
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
@@ -68,6 +69,7 @@ class ChatViewModelTest {
             every { bondMemoryDao() } returns mockk(relaxed = true)
             every { bondGrowthDao() } returns mockk<BondGrowthDao>(relaxed = true)
             every { scheduledTaskDao() } returns mockk(relaxed = true)
+            every { workspaceDao() } returns mockk<WorkspaceDao>(relaxed = true)
         }
         val mockDownloadVM = mockk<com.pocketclaw.app.ui.download.DownloadViewModel>(relaxed = true) {
             every { isModelLoaded } returns mockk { every { value } returns false }

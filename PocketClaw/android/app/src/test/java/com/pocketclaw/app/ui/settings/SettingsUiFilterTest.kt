@@ -80,7 +80,6 @@ class SettingsUiFilterTest {
         }
 
         viewModel = SettingsViewModel(mockApp)
-        advanceUntilIdle()
     }
 
     @After

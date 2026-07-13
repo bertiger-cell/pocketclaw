@@ -85,7 +85,6 @@ class ChatViewModelTest {
         }
 
         viewModel = ChatViewModel(mockApp)
-        advanceUntilIdle()
     }
 
     @After

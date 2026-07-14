@@ -40,6 +40,19 @@ import com.pocketclaw.app.ui.theme.*
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Close
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -72,10 +85,24 @@ fun ChatScreen(
     selectedModel: LLMModel? = null,
     onSelectModel: (LLMModel) -> Unit = {},
     currentModelName: String = "",
+    pendingAttachments: List<Uri> = emptyList(),
+    onAttachFile: (Uri) -> Unit = {},
+    onRemoveAttachment: (Uri) -> Unit = {},
 ) {
     val listState = rememberLazyListState()
     val colors = AppColors
     var showModelDropdown by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(
+                it, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            onAttachFile(it)
+        }
+    }
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
@@ -402,6 +429,7 @@ private fun ChatInputBar(
     isRecording: Boolean,
     onSend: () -> Unit,
     onMicPress: () -> Unit,
+    onAttach: () -> Unit = {},
 ) {
     val colors = AppColors
     Surface(
@@ -428,7 +456,20 @@ private fun ChatInputBar(
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+
+            IconButton(
+                onClick = onAttach,
+                modifier = Modifier.size(40.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AttachFile,
+                    contentDescription = "Attach file",
+                    tint = CrabOrange,
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
 
             OutlinedTextField(
                 value = text,

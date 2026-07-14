@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.net.Uri
 
 /**
  * Minimal orchestrator – wires sub-ViewModels together and owns only
@@ -98,6 +99,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun sendTextMessage(text: String) = chatVM.sendTextMessage(text)
     fun newTopic() = chatVM.newTopic()
     fun deleteMessage(message: ChatMessage) = chatVM.deleteMessage(message)
+
+    val pendingAttachments: StateFlow<List<Uri>> get() = chatVM.pendingAttachments
+    fun attachFile(uri: Uri) = chatVM.attachFile(uri)
+    fun removeAttachment(uri: Uri) = chatVM.removeAttachment(uri)
 
     // =====================================================================
     // 2. MODEL DOWNLOAD DELEGATION

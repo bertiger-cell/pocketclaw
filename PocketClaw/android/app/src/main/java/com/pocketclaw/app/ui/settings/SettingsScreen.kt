@@ -65,6 +65,9 @@ fun SettingsScreen(
     openCodeZenModel: String = "zen-coder-v1",
     onSetOpenCodeZenModel: (String) -> Unit = {},
     openCodeZenConnected: Boolean = false,
+    // -- Ollama Cloud --
+    ollamaCloudApiKey: String = "",
+    onSetOllamaCloudApiKey: (String) -> Unit = {},
     // -- Local models --
     qwenDownloaded: Boolean = false,
     qwenDownloading: Boolean = false,
@@ -207,6 +210,7 @@ fun SettingsScreen(
                 ModeChip("OpenRouter", llmMode == "openrouter") { onSwitchLlmMode("openrouter") }
                 ModeChip("Ollama", llmMode == "ollama") { onSwitchLlmMode("ollama") }
                 ModeChip("OpenCode Zen", llmMode == "opencode_zen") { onSwitchLlmMode("opencode_zen") }
+                ModeChip("Ollama Cloud", llmMode == "ollama_cloud") { onSwitchLlmMode("ollama_cloud") }
             }
 
             // ── OpenRouter config card ──
@@ -244,6 +248,15 @@ fun SettingsScreen(
                     onApiKeyChange = { onSetOpenCodeZenApiKey(it) },
                     onEndpointChange = { onSetOpenCodeZenEndpoint(it) },
                     onModelSelect = { onSetOpenCodeZenModel(it) },
+                    colors = colors,
+                )
+            }
+
+            // ── Ollama Cloud config card ──
+            AnimatedVisibility(visible = llmMode == "ollama_cloud", enter = fadeIn() + expandVertically()) {
+                OllamaCloudBentoCard(
+                    apiKey = ollamaCloudApiKey,
+                    onApiKeyChange = { onSetOllamaCloudApiKey(it) },
                     colors = colors,
                 )
             }
@@ -1546,6 +1559,102 @@ private fun CreateTaskDialog(onDismiss: () -> Unit, onCreate: (String, Int, Int,
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = colors.textSecondary) } },
     )
+}
+
+
+// ══════════════════════════════════════════════════════════════════
+//  Ollama Cloud Bento Card
+// ══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun OllamaCloudBentoCard(
+    apiKey: String,
+    onApiKeyChange: (String) -> Unit,
+    colors: ColorPalette,
+) {
+    val isConfigured = apiKey.isNotBlank()
+    var showKey by remember { mutableStateOf(false) }
+    var editingKey by remember { mutableStateOf(apiKey) }
+    var keyDirty by remember { mutableStateOf(false) }
+
+    Surface(
+        color = colors.card,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // ── Header with badge ──
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Cloud, null, tint = CrabOrange, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Ollama Cloud", style = MaterialTheme.typography.titleSmall, color = colors.textPrimary)
+                Spacer(modifier = Modifier.weight(1f))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (isConfigured) AccentGreen.copy(alpha = 0.15f) else AccentRed.copy(alpha = 0.15f),
+                ) {
+                    Text(
+                        text = if (isConfigured) "Konfiguriert" else "Inaktiv",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isConfigured) AccentGreen else AccentRed,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ── API Key field ──
+            OutlinedTextField(
+                value = editingKey,
+                onValueChange = { editingKey = it; keyDirty = true },
+                label = { Text("API Key") },
+                singleLine = true,
+                visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { showKey = !showKey }) {
+                        Icon(
+                            if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = null,
+                            tint = colors.textMuted,
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = CrabOrange,
+                    unfocusedBorderColor = colors.textMuted.copy(alpha = 0.4f),
+                    cursorColor = CrabOrange,
+                    focusedTextColor = colors.textPrimary,
+                    unfocusedTextColor = colors.textPrimary,
+                    focusedLabelColor = CrabOrange,
+                    unfocusedLabelColor = colors.textSecondary,
+                ),
+            )
+
+            // ── Save button ──
+            if (keyDirty && editingKey != apiKey) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { onApiKeyChange(editingKey); keyDirty = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = CrabOrange),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Speichern", color = DarkTextPrimary)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // ── Hint ──
+            Text(
+                text = "Hosted inference via ollama.com. Benötigt einen Ollama Cloud API Key.",
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textMuted,
+            )
+        }
+    }
 }
 
 @Composable

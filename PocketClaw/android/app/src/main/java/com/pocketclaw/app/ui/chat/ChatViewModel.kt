@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import android.net.Uri
 
 /**
  * Single Responsibility: Chat messages, input state, generation pipeline, and tool-call loop.
@@ -83,6 +84,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _activeWorkspace = MutableStateFlow<WorkspaceProject?>(null)
     val activeWorkspace: StateFlow<WorkspaceProject?> = _activeWorkspace.asStateFlow()
 
+    private val _pendingAttachments = MutableStateFlow<List<Uri>>(emptyList())
+    val pendingAttachments: StateFlow<List<Uri>> = _pendingAttachments.asStateFlow()
+
     // -- Lifecycle ------------------------------------------------
 
     fun setCurrentModel(model: LLMModel?) {
@@ -95,6 +99,20 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setActiveWorkspace(project: WorkspaceProject?) {
         _activeWorkspace.value = project
+    }
+
+    fun attachFile(uri: Uri) {
+        _pendingAttachments.update { current ->
+            if (uri in current) current else current + uri
+        }
+    }
+
+    fun removeAttachment(uri: Uri) {
+        _pendingAttachments.update { current -> current - uri }
+    }
+
+    fun clearAttachments() {
+        _pendingAttachments.value = emptyList()
     }
 
     init {
@@ -148,6 +166,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         _inputText.value = ""
         toolLoopDepth = 0
         generateResponse(text)
+        clearAttachments()
     }
 
     fun newTopic() {

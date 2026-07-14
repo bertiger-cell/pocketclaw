@@ -248,6 +248,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         Log.d(TAG, "Ollama model set to: $model")
     }
 
+    fun setOllamaCloudApiKey(key: String) {
+        Preferences.ollamaApiKey = key
+        Log.d(TAG, "Ollama Cloud API key saved")
+    }
+
     fun refreshOllamaModels() {
         viewModelScope.launch {
             try {

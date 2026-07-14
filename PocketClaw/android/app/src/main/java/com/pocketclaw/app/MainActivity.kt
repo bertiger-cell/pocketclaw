@@ -91,6 +91,9 @@ class MainActivity : ComponentActivity() {
                         selectedModel = null,
                         onSelectModel = viewModel::selectModel,
                         currentModelName = viewModel.currentModelName.collectAsState().value,
+                        pendingAttachments = viewModel.pendingAttachments.collectAsState().value,
+                        onAttachFile = viewModel::attachFile,
+                        onRemoveAttachment = viewModel::removeAttachment,
                     )
                     1 -> MemoryScreen(
                         memories = viewModel.memories.collectAsState().value,
@@ -142,6 +145,8 @@ class MainActivity : ComponentActivity() {
                         openCodeZenModel = viewModel.selectedOpenCodeZenModel.collectAsState().value,
                         onSetOpenCodeZenModel = viewModel::setOpenCodeZenModel,
                         openCodeZenConnected = viewModel.openCodeZenConnected.collectAsState().value,
+                        ollamaCloudApiKey = Preferences.ollamaApiKey,
+                        onSetOllamaCloudApiKey = viewModel::setOllamaCloudApiKey,
                         localModels = viewModel.allLocalModels.collectAsState().value,
                         modelDownloads = viewModel.modelDownloads.collectAsState().value,
                         modelLoading = viewModel.modelLoading.collectAsState().value,

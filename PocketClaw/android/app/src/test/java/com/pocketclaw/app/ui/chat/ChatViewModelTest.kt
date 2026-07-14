@@ -52,9 +52,10 @@ class ChatViewModelTest {
         mockInferenceService = mockk(relaxed = true)
         mockToolExecutor = mockk(relaxed = true)
 
-        val mockChatRepository = mockk<ChatRepository>(relaxed = true) {
-            coEvery { createNewChat(any(), any(), anyOrNull()) } returns "test-chat-id"
-        }
+        val mockChatRepository = mockk<ChatRepository>(relaxed = true)
+        coEvery { mockChatRepository.createNewChat(any(), any()) } returns "test-chat-id"
+        coEvery { mockChatRepository.createNewChat(any(), any(), any()) } returns "test-chat-id"
+
         val mockBondEngine = mockk<BondEngine>(relaxed = true) {
             coEvery { getMemoriesForPrompt() } returns emptyList()
             coEvery { getGrowthStage() } returns 0

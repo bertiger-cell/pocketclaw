@@ -55,7 +55,7 @@ object SOUL {
 [M:pref:food:红烧肉]"""
 
     fun build(): String = buildString {
-        val isCloud = Preferences.llmMode == "api"
+        val isCloud = Preferences.llmMode in listOf("openrouter", "opencode_zen", "ollama_cloud")
         append(if (isCloud) PERSONA_CLOUD.trimIndent() else PERSONA_LOCAL.trimIndent())
         append("\n\n")
         append(HARD_RULES.trimIndent())

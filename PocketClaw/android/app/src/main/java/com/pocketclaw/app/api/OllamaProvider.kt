@@ -177,3 +177,116 @@ object OllamaProvider : CloudInferenceProvider {
         }
     }
 }
+
+/**
+ * Ollama Cloud – hosted inference via ollama.com.
+ *
+ * Routes to `https://ollama.com/v1/chat/completions` (OpenAI-compatible).
+ * Auth: Bearer token from [Preferences.ollamaApiKey].
+ *
+ * Differs from local [OllamaProvider]: uses cloud URL + Authorization header.
+ */
+object OllamaCloudProvider : CloudInferenceProvider {
+
+    private const val TAG = "OllamaCloud"
+    private const val BASE_URL = "https://ollama.com/api/v1/chat/completions"
+
+    override val displayName: String = "Ollama Cloud"
+
+    override fun isReady(): Boolean = Preferences.ollamaApiKey.isNotBlank()
+
+    private val client: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .build()
+
+    override fun generateStream(
+        assembled: PromptAssembler.AssembledPrompt,
+        attachments: List<FileAttachment>,
+    ): Flow<String> = flow {
+        val apiKey = Preferences.ollamaApiKey
+        if (apiKey.isBlank()) {
+            emit("Kein Ollama Cloud API Key konfiguriert. Bitte in Einstellungen eintragen.")
+            return@flow
+        }
+
+        val model = Preferences.ollamaSelectedModel
+        if (model.isBlank()) {
+            emit("Kein Ollama Cloud Modell ausgewählt. Bitte in Einstellungen ein Modell wählen.")
+            return@flow
+        }
+
+        val body = buildRequestBody(assembled, model, attachments)
+        Log.d(TAG, "Request model=$model, attachments=${attachments.size}")
+
+        val request = Request.Builder()
+            .url(BASE_URL)
+            .addHeader("Authorization", "Bearer $apiKey")
+            .addHeader("Content-Type", "application/json")
+            .post(body.toString().toRequestBody("application/json".toMediaType()))
+            .build()
+
+        StreamingSSE.executeAndStream(request, client, TAG).collect { emit(it) }
+    }.flowOn(Dispatchers.IO)
+
+    private fun buildRequestBody(
+        assembled: PromptAssembler.AssembledPrompt,
+        model: String,
+        attachments: List<FileAttachment>,
+    ): JSONObject {
+        val messages = JSONArray()
+
+        val systemContent = buildString {
+            append(assembled.systemPrompt)
+            for (att in attachments.filter { it.isText }) {
+                append("\n\n--- File: ${att.fileName} (${att.mimeType}) ---\n")
+                append("```\n${att.base64Data}\n```")
+            }
+        }
+        messages.put(JSONObject().apply {
+            put("role", "system")
+            put("content", systemContent)
+        })
+
+        for (turn in assembled.chatHistory) {
+            messages.put(JSONObject().apply {
+                put("role", turn.role)
+                put("content", turn.content)
+            })
+        }
+
+        val imageAttachments = attachments.filter { it.isImage }
+        if (imageAttachments.isNotEmpty()) {
+            val contentArray = JSONArray()
+            contentArray.put(JSONObject().apply {
+                put("type", "text")
+                put("text", assembled.userMessage)
+            })
+            for (img in imageAttachments) {
+                contentArray.put(JSONObject().apply {
+                    put("type", "image_url")
+                    put("image_url", JSONObject().apply {
+                        put("url", "data:${img.mimeType};base64,${img.base64Data}")
+                    })
+                })
+            }
+            messages.put(JSONObject().apply {
+                put("role", "user")
+                put("content", contentArray)
+            })
+        } else {
+            messages.put(JSONObject().apply {
+                put("role", "user")
+                put("content", assembled.userMessage)
+            })
+        }
+
+        return JSONObject().apply {
+            put("model", model)
+            put("messages", messages)
+            put("stream", true)
+            put("temperature", 0.7)
+        }
+    }
+}

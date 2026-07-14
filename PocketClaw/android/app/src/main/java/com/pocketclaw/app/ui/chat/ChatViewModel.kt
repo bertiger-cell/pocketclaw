@@ -170,6 +170,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private fun resolveActiveProvider(mode: String): CloudInferenceProvider? = when (mode) {
         "openrouter"     -> app.openRouterProvider
         "ollama"         -> app.ollamaProvider
+        "ollama_cloud"   -> app.ollamaCloudProvider
         "opencode_zen"   -> app.openCodeZenProvider
         else             -> null
     }

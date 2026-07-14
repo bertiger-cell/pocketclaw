@@ -155,9 +155,6 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:2.3.6")
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.6")
 
-    // OkHttp
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-
     // MediaPipe (LLM inference + embeddings)
     implementation("com.google.mediapipe:tasks-genai:0.10.32")
     implementation("com.google.mediapipe:tasks-vision:0.10.32")

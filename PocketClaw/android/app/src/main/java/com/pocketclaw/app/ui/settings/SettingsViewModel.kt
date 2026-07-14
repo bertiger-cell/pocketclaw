@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.llmhub.llmhub.inference.InferenceService
 import com.pocketclaw.app.PocketClawApplication
+import com.pocketclaw.app.api.OllamaCloudProvider
 import com.pocketclaw.app.api.OllamaProvider
 import com.pocketclaw.app.api.OpenCodeZenProvider
 import com.pocketclaw.app.api.OpenRouterProvider
@@ -80,6 +81,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         when (mode) {
             "openrouter"   -> OpenRouterProvider.isReady()
             "ollama"       -> OllamaProvider.isReady()
+            "ollama_cloud" -> OllamaCloudProvider.isReady()
             "opencode_zen" -> OpenCodeZenProvider.isReady()
             else           -> loaded
         }
@@ -208,6 +210,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 downloadVM.setCurrentModelName("Ollama: ${Preferences.ollamaSelectedModel.ifBlank { "Kein Modell" }}")
                 refreshOllamaModels()
             }
+            "ollama_cloud" -> {
+                downloadVM.setCurrentModelName("Ollama Cloud: ${Preferences.ollamaSelectedModel.ifBlank { "Kein Modell" }}")
+            }
             "opencode_zen" -> {
                 downloadVM.setCurrentModelName("OpenCode Zen: ${Preferences.openCodeZenSelectedModel}")
                 refreshOpenCodeZenGateway()
@@ -334,7 +339,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch(Dispatchers.IO) {
             val id = "ws_${System.currentTimeMillis()}"
             val baseDir = app.getExternalFilesDir(null) ?: app.filesDir
-            val workspacesDir = File(baseDir, "PocketClaw/Workspaces/${name.sanitizeForFolder()}")
+            val workspacesDir = File(baseDir, "Workspaces/${name.sanitizeForFolder()}")
             if (!workspacesDir.exists()) {
                 val success = workspacesDir.mkdirs()
                 if (!success) {
@@ -367,7 +372,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 val targetDir = File(project.localFolderPath).canonicalFile
                 val workspacesRoot = File(
                     (app.getExternalFilesDir(null) ?: app.filesDir),
-                    "PocketClaw/Workspaces"
+                    "Workspaces"
                 ).canonicalFile
 
                 if (!targetDir.path.startsWith(workspacesRoot.path)) {
@@ -467,6 +472,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             "ollama" -> {
                 downloadVM.setCurrentModelName("Ollama: ${Preferences.ollamaSelectedModel.ifBlank { "Kein Modell" }}")
                 refreshOllamaModels()
+            }
+            "ollama_cloud" -> {
+                downloadVM.setCurrentModelName("Ollama Cloud: ${Preferences.ollamaSelectedModel.ifBlank { "Kein Modell" }}")
             }
             "opencode_zen" -> {
                 downloadVM.setCurrentModelName("OpenCode Zen: ${Preferences.openCodeZenSelectedModel}")

@@ -35,7 +35,7 @@ data class ContextBudget(
         )
 
         fun forMode(mode: String): ContextBudget = when (mode) {
-            "api" -> CLOUD
+            "openrouter", "opencode_zen", "ollama_cloud" -> CLOUD
             else -> LOCAL
         }
     }

@@ -78,6 +78,10 @@ object Preferences {
         get() = if (::prefs.isInitialized) prefs.getString("ollama_selected_model", "") ?: "" else ""
         set(value) { if (::prefs.isInitialized) prefs.edit().putString("ollama_selected_model", value).apply() }
 
+    var ollamaApiKey: String
+        get() = if (::prefs.isInitialized) prefs.getString("ollama_api_key", "") ?: "" else ""
+        set(value) { if (::prefs.isInitialized) prefs.edit().putString("ollama_api_key", value).apply() }
+
     // -- OpenCode Zen ------------------------------------------------
 
     var openCodeZenApiKey: String

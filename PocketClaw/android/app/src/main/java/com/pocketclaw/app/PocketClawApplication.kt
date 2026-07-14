@@ -27,6 +27,7 @@ import com.pocketclaw.claw.security.AuditLog
 import com.pocketclaw.claw.security.PermissionGuard
 import com.pocketclaw.claw.tools.*
 import com.pocketclaw.app.api.CloudInferenceProvider
+import com.pocketclaw.app.api.OllamaCloudProvider
 import com.pocketclaw.app.api.OllamaProvider
 import com.pocketclaw.app.api.OpenCodeZenProvider
 import com.pocketclaw.app.api.OpenRouterProvider
@@ -62,6 +63,7 @@ class PocketClawApplication : Application() {
     val toolExecutor by lazy { ToolExecutor(this, permissionGuard, auditLog) }
     val openRouterProvider by lazy { OpenRouterProvider }
     val ollamaProvider by lazy { OllamaProvider }
+    val ollamaCloudProvider by lazy { OllamaCloudProvider }
     val openCodeZenProvider by lazy { OpenCodeZenProvider }
 
     private var _inferenceService: InferenceService? = null
@@ -132,6 +134,7 @@ class PocketClawApplication : Application() {
             val sb = StringBuilder()
             val provider: CloudInferenceProvider = when (Preferences.llmMode) {
                 "ollama" -> OllamaProvider
+                "ollama_cloud" -> OllamaCloudProvider
                 else -> OpenRouterProvider
             }
             provider.generateStream(assembled).collect { chunk ->

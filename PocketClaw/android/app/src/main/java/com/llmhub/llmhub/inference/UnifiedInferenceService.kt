@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import com.llmhub.llmhub.data.LLMModel
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
 /**
  * Unified Inference Service that routes requests to the appropriate backend Service

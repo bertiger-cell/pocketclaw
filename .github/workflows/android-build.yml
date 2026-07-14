@@ -45,6 +45,15 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x PocketClaw/android/gradlew
 
+      - name: Run Unit Tests
+        working-directory: PocketClaw/android
+        run: ./gradlew testDebugUnitTest --no-daemon --parallel --build-cache
+
+      - name: Run Lint
+        working-directory: PocketClaw/android
+        run: ./gradlew lintDebug --no-daemon --parallel --build-cache
+        continue-on-error: true
+
       - name: Build Debug APK
         working-directory: PocketClaw/android
         run: ./gradlew assembleDebug --no-daemon --parallel --build-cache

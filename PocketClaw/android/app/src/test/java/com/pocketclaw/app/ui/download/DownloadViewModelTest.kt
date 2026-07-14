@@ -65,6 +65,9 @@ class DownloadViewModelTest {
         tempDir = createTempDir("download-viewmodel-test")
         mockApp = mockk(relaxed = true) {
             every { filesDir } returns tempDir
+            every { getExternalFilesDir(any()) } returns File(tempDir, "external")
+            every { getSharedPreferences(any(), any()) } returns mockk(relaxed = true)
+            every { getExternalFilesDir(null) } returns File(tempDir, "external")
         }
 
         mockkConstructor(HttpClient::class)

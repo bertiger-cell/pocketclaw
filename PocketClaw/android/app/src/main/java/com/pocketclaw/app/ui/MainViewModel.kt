@@ -170,6 +170,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setOpenRouterModel(modelId: String) = settingsVM.setOpenRouterModel(modelId)
     fun setOllamaHost(host: String) = settingsVM.setOllamaHost(host)
     fun setOllamaModel(modelId: String) = settingsVM.setOllamaModel(modelId)
+    fun setOllamaCloudApiKey(key: String) = settingsVM.setOllamaCloudApiKey(key)
     fun refreshOllamaModels() = settingsVM.refreshOllamaModels()
     fun setOpenCodeZenApiKey(key: String) = settingsVM.setOpenCodeZenApiKey(key)
     fun setOpenCodeZenEndpoint(endpoint: String) = settingsVM.setOpenCodeZenEndpoint(endpoint)
